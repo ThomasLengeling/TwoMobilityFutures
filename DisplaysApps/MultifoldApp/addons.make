@@ -1,0 +1,10 @@
+ofxAudioFile
+ofxDatGui
+ofxGui
+ofxHapPlayer
+ofxHPVPlayer
+ofxNetwork
+ofxOsc
+ofxSoundObjects
+ofxWarp
+ofxXmlSettings

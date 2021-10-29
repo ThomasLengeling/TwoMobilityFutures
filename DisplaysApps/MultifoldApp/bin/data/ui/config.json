@@ -1,0 +1,23 @@
+{
+  "window":{
+    "width" : 1920,
+    "height" : 1080,
+    "decorated": 1,
+    "numScreen": 3
+  },
+
+  "network":{
+    "ip": "127.0.0.1",
+    "port": 32000
+  },
+
+  "position":{
+    "x" : 0,
+    "y" : 0
+  },
+
+  "video":{
+    "type": 0
+  }
+
+}
