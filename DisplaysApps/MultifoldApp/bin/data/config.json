@@ -1,0 +1,39 @@
+{
+  "window": [
+    {
+      "width": 3840,
+      "height": 2160,
+      "decorated": 0,
+      "numscreen": 3,
+      "type": "individual",
+      "alias": "center",
+      "id": 1,
+      "posx": 8400
+    },
+    {
+      "width": 640,
+      "height": 480,
+      "decorated": 0,
+      "numscreen": 1,
+      "type": "main",
+      "alias": "main",
+      "id": -1,
+      "posx": 640
+    }
+  ],
+  "network": {
+    "ip": "127.0.0.1",
+    "port0": 15998,
+    "port1": 15999,
+    "type": "slave",
+    "id":1
+  },
+  "position": {
+    "x": 0,
+    "y": 0
+  },
+  "video": {
+    "format": "hpv",
+    "orientation": "portrait"
+  }
+}
