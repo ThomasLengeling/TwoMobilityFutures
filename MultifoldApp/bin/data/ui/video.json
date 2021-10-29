@@ -1,0 +1,33 @@
+{
+	"videoType": 1,
+	"videos": [
+
+		{
+			"width": 1920,
+			"height": 1080,
+			"name": "Videos/screen04.hpv",
+			"alias": "left",
+			"drawx": 0,
+			"drawy": 0
+		},
+		{
+			"width": 1920,
+			"height": 1080,
+			"name": "Videos/screen04.hpv",
+			"alias": "front",
+			"drawx": 0,
+			"drawy": 0
+		},
+
+		{
+			"width": 1920,
+			"height": 1080,
+			"name": "Videos/screen04.hpv",
+			"alias": "right",
+			"drawx": 0,
+			"drawy": 0
+		}
+
+
+	]
+}
