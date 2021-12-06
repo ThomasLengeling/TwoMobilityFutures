@@ -67,7 +67,8 @@ void ofApp::update() {
         }
 
         if (mVideoSyncPlaying) {
-            if (!player.isPlaying()) {
+            //reset videos once the video is done playing
+            if (audioPos >= 0.999999) {
                 ofLog(OF_LOG_NOTICE) << "Reset Play";
                 if (mMasterUDP) {
                     //sync audio
@@ -79,6 +80,7 @@ void ofApp::update() {
                     player.setPaused(false);
                     player.setPosition(0.0);
                     player.play();
+                    mStartMS = 0.0;
 
                     string message = "d";
                     udpSendLeft.Send(message.c_str(), message.length());
@@ -402,7 +404,7 @@ void ofApp::drawGui() {
         ///ofDrawBitmapString("Frame: " + to_string(cur_frame) + " - " + to_string(mMinFrame), 10, 30);
 
 
-        ofDrawBitmapString(ofPath, 10, 450);
+        ofDrawBitmapString(ofPath, 10, 470);
         ofDrawBitmapString("Current Sequence Name: "+mCommon->mCurrentSeqName, 10, 230);
 
         int i = 0;
@@ -501,30 +503,37 @@ void ofApp::loadSequence(int id) {
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 
-    if (key == '1') {
+    if (key == '0') {
         loadSequence(0);
     }
-    if (key == '2') {
+    if (key == '1') {
         loadSequence(1);
     }
-    if (key == '3') {
+    if (key == '2') {
         loadSequence(2);
     }
-    if (key == '4') {
+    if (key == '3') {
         loadSequence(3);
     }
-    if (key == '5') {
+    if (key == '4') {
         loadSequence(4);
     }
-    if (key == '6') {
+    if (key == '5') {
         loadSequence(5);
     }
-    if (key == '7') {
+    if (key == '6') {
         loadSequence(6);
     }
-    if (key == '8') {
+    if (key == '7') {
         loadSequence(7);
     }
+    if (key == '8') {
+        loadSequence(8);
+    }
+    if (key == '9') {
+        loadSequence(9);
+    }
+
 
 
 

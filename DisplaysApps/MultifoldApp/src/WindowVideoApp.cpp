@@ -63,6 +63,7 @@ void WindowVideoApp::update() {
 			mVideoPlayer->close();
 			mVideoPlayer->loadVideo(mVideoSets[mCurrentSetId]);
 			mCommon->vNewVideos[mId] = false;
+			ofLog(OF_LOG_NOTICE) << "Loaded Init Video " << mId;
 		}
 	}
 		
@@ -88,9 +89,6 @@ void WindowVideoApp::loadDebugImg() {
 //--------------------------------------------------------------
 void WindowVideoApp::draw() {
 
-
-	ofSetColor(mBkgColor);
-	ofDrawCircle(glm::vec2(WIDTH_WINDOW / 2.0, HEIGHT_WINDOW / 2.0), inc);
 
 	ofSetColor(0);
 	ofDrawBitmapString("fps: " + to_string(ofGetFrameRate()), WIDTH_WINDOW / 2.0, HEIGHT_WINDOW / 2.0);
