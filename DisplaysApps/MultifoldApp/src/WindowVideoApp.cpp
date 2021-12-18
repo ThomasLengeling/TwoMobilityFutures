@@ -9,7 +9,7 @@ void WindowVideoApp::setup() {
 
 	//ofBackground(mBkgColor);
 	//ofSetFullscreen(true);
-	ofSetFrameRate(30);
+	ofSetFrameRate(24);
 	ofDisableSmoothing();
 	ofSetBackgroundAuto(false);
 	ofSetVerticalSync(false);
@@ -28,11 +28,11 @@ void WindowVideoApp::setup() {
 	//2 -> MOV
 	//std::string tmpName = "videos/Sequence_05_1.mov";
 
-
 	if(!mVideoSets.empty()){
 		mCurrentSetId = 0;
 		mVideoPlayer = inn::VideoPlayers::create(1, 0);
 		mVideoPlayer->loadVideo(mVideoSets[mCurrentSetId]);
+		mCommon->maxFrames = mVideoPlayer->getTotalNumFrames();
 	}
 	else {
 		ofLog(OF_LOG_NOTICE) << "Video Set is empty " << mId;
@@ -48,12 +48,14 @@ void WindowVideoApp::setup() {
 	*/
 
 	ofLog(OF_LOG_NOTICE) << "Done Loading VW"<< mId;
-
 }
 
 void WindowVideoApp::update() {
 
-	if (mCommon->startSoundSync) {
+	if (mCommon->mFrameSync) {
+		mVideoPlayer->updateFrame(mCommon->commonFrame);
+	}
+	else if (mCommon-mAudioSync) {
 		mVideoPlayer->setPosition(mCommon->mAudioPos);
 	}
 
@@ -63,6 +65,7 @@ void WindowVideoApp::update() {
 			mVideoPlayer->close();
 			mVideoPlayer->loadVideo(mVideoSets[mCurrentSetId]);
 			mCommon->vNewVideos[mId] = false;
+			mCommon->maxFrames = mVideoPlayer->getTotalNumFrames();
 			ofLog(OF_LOG_NOTICE) << "Loaded Init Video " << mId;
 		}
 	}
@@ -71,9 +74,9 @@ void WindowVideoApp::update() {
 
 	//update sync
 		mVideoPlayer->update();
+		
+		///---?
 		HPV::Update();
-
-
 }
 
 //--------------------------------------------------------------
@@ -97,7 +100,7 @@ void WindowVideoApp::draw() {
 	if (inc>=HEIGHT_WINDOW/1.5) {
 		inc = 0;
 	}
-
+	
 
 	ofSetColor(255);
 	mVideoPlayer->draw(0, 0, ofGetWindowWidth(), ofGetWindowHeight());

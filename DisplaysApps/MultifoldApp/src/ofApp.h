@@ -66,6 +66,7 @@ public:
     ofParameter<bool>     mResetVideos;
     ofParameter<bool>     mStopVideos;
     ofParameter<float>    mMasterAudio;
+    ofParameter<float>    mGainAudio;
     
     ofxPanel mGui;
     bool mDrawGUI;
@@ -139,9 +140,6 @@ public:
     bool            mInitialize;
     float           mInitTimer;
 
-    //main states
-    bool            mUDPSoundSync;
-
 
     void setupCommonState();
     shared_ptr<CommonState> mCommon;
@@ -149,10 +147,20 @@ public:
     //utilities
     std::vector<std::string> string_split(const std::string& str);
 
-    bool mLockfpsSound;
+
     bool mVideoSyncPlaying;
     float mStartMS;
 
+    int mLoopCount;
+    int mMaxLoopCount;
+
+    int frameCount;
+
+    void setSyncMode(int value);
+    bool mLockFpsUpdate;
+    bool mLockFpsAudio;
+    bool mLockFpsUDPAudio;
+    int mCurrSyncMode;
 
 };
 
@@ -163,11 +171,21 @@ public:
     CommonState() {
         mSequenceId = 0;
         mAudioPos = 0;
+        commonFrame = 0;
+        mFrameSync = false;
+        mAudioSync = true;
     }
 
+    int commonFrame;
+    int maxFrames;
+
     //video changes 
-    float mAudioPos;
-    bool startSoundSync;
+    double mAudioPos;
+
+    //sync
+    bool mAudioSync;
+    bool mFrameSync;
+
     bool mNewVideo;
 
     vector<bool> vNewVideos;
@@ -177,6 +195,8 @@ public:
     //window id and name
     std::string mAlias;
     int mId;
+
+
 
     int mSequenceId; //current sequence id
     std::string mCurrentSeqName; //sequence name

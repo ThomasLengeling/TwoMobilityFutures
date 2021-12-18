@@ -35,9 +35,7 @@ void VideoPlayers::loadVideo(std::string & name){
         mHPVPlayer.play();
         mHPVPlayer.setPaused(true);
         //mHPVPlayer.setDoubleBuffered(true);
-      
-       
-       // 
+    
     }
     
     if(mPlayerType == 0){
@@ -78,7 +76,7 @@ void VideoPlayers::closeVideo() {
     }
 }
 
-void VideoPlayers::setPosition(float value) {
+void VideoPlayers::setPosition(double value) {
     if (mPlayerType == 0) {
         mHAPPlayer.setPosition(value);
     }
