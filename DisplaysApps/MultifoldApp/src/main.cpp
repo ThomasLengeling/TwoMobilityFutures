@@ -117,7 +117,7 @@ int main( ){
 				settings.setGLVersion(4, 1);
 
 				mainWindow = ofCreateWindow(settings);
-				mainWindow->setVerticalSync(true);
+				mainWindow->setVerticalSync(false); //no sync b = true
 
 			}
 			ofLog(OF_LOG_NOTICE) << " " << std::endl;

@@ -15,7 +15,8 @@ void ofApp::setup(){
     ofPath = ofFilePath::getAbsolutePath(ofToDataPath("C:/Users/Bizon/Desktop/App/data/"));
     ofLog(OF_LOG_NOTICE) << " OF data path is: " << ofPath << endl;
     
-    ofSetFrameRate(30);
+    ofSetFrameRate(24);
+    ofSetVerticalSync(false);
     ofBackground(0);
     ofDisableArbTex();
  
@@ -39,9 +40,15 @@ void ofApp::setup(){
 
     ofResetElapsedTimeCounter();
     mInitTimer = 14000;//seconds
-    mUDPSoundSync = false;
     mHandshakeUDP = false;
-    mLockfpsSound = false;
+
+    mLockFpsUpdate = false;
+    mLockFpsAudio = false;
+    mLockFpsUDPAudio = false;
+    mCurrSyncMode = 0;
+
+    mLoopCount   = 0;
+    mMaxLoopCount = 10;
 
     ofLog(OF_LOG_NOTICE) << "Finishing setup";
     ofLog(OF_LOG_NOTICE) << "Size" << ofGetWindowWidth() << " " << ofGetWindowHeight();
@@ -54,61 +61,94 @@ void ofApp::update() {
     //set the master frame with the current change frame
     //mMasterFrame.set(cur_frame);
 
-
+    //UPDATE MASTER
     if (mMasterUDP) {
 
         //update audio pos
-        float audioPos = player.getPosition();
-        mCommon->mAudioPos = audioPos;
+        double audioPos = player.getPosition();
         mMasterAudio.set(audioPos);
 
-        if (mUDPSoundSync) {
+        //lock the fps with app frame rate
+        if (mLockFpsUpdate){
+            mCommon->commonFrame++;
+
+            //reset
+            if (mCommon->commonFrame >= mCommon->maxFrames) {
+                mCommon->commonFrame = mCommon->maxFrames;
+                ofLog(OF_LOG_NOTICE) << "Done Frames";
+            }
+        } //lock fps with audio update
+        else if(mLockFpsAudio){
+            mCommon->mAudioPos = audioPos;
+
+        }  //lock the fps with udp audio
+        else if (mLockFpsUDPAudio) {
             sendAudioPosUDP(audioPos);
+
+        }
+    }
+
+      //if receiving udp then is a salve
+    if (mSlaveUDP) {
+        updateUDP();
+
+        if (mLockFpsUpdate) {
+            mCommon->commonFrame++;
+
+            //reset
+            if (mCommon->commonFrame >= mCommon->maxFrames) {
+                mCommon->commonFrame = mCommon->maxFrames;
+                ofLog(OF_LOG_NOTICE) << "Done Frames";
+            }
+        } //lock fps with audio update
+        else if (mLockFpsAudio) {
+            double audioPos = player.getPosition();
+            mMasterAudio.set(audioPos);
+            mCommon->mAudioPos = audioPos;
+        }  //lock the fps with udp audio
+        else if (mLockFpsUDPAudio) {
+            
         }
 
+    }
+
+    if (mMasterUDP) {
+
+
+
+        //reser video if 
         if (mVideoSyncPlaying) {
             //reset videos once the video is done playing
-            if (audioPos >= 0.999999) {
+            if (player.getPosition() >= 0.998) {
                 ofLog(OF_LOG_NOTICE) << "Reset Play";
                 if (mMasterUDP) {
-                    //sync audio
-                    mUDPSoundSync = false;
-                    mLockfpsSound = true;
-                    mCommon->startSoundSync = true;
+
+                    //syncs 
+                    setSyncMode(mCurrSyncMode);
 
                     //sound reset
-                    player.setPaused(false);
+                    //player.setPaused(false);
                     player.setPosition(0.0);
                     player.play();
                     mStartMS = 0.0;
+                    mCommon->commonFrame = 0;
 
                     string message = "d";
                     udpSendLeft.Send(message.c_str(), message.length());
                     udpSendCenter.Send(message.c_str(), message.length());
+
+                    mLoopCount++;
                 }
 
             }
+
         }
     }
 
- 
-
-    //if receiving udp then is a salve
-    if (mSlaveUDP) {
-        updateUDP();
-
-        if (mLockfpsSound) {
-            float audioPos = player.getPosition();
-            mCommon->mAudioPos = audioPos;
-            mMasterAudio.set(audioPos);
-        }
-    }
 
     //update osc
    // updateOSC();
 
-
-    //updateUDP(float audioPos);
 }
 
 //--------------------------------------------------------------
@@ -120,9 +160,6 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::sendAudioPosUDP(float audioPos) {
-    
-
-
         //update udp
     string msg = "t ";
     msg += to_string(audioPos);
@@ -144,24 +181,37 @@ void ofApp::updateUDP() {
         }
         //start
         if (message[0] == 'a') {
-            mCommon->startSoundSync = true;
+            
         }
         if (message[0] == 'd') {
-            mUDPSoundSync = false;
-            mCommon->startSoundSync = true;
-            mLockfpsSound = true;
+
+            setSyncMode(mCurrSyncMode);
 
             //sound reset
+            mCommon->commonFrame = 0;
             player.setPaused(false);
             player.setPosition(0.0);
             player.setVolume(0.0);
             player.play();
 
         }
+
+        if (message[0] == 'f') {
+            auto smsg = string_split(message);
+            int mode = std::stoi(smsg[1]);
+            if (mode ==  1) {
+                mCommon->mFrameSync = true;
+            }
+            else {
+                mCommon->mFrameSync = false;
+            }
+            
+        }
+
         //stop
         if (message[0] == 's') {
             //send UDP start
-            mCommon->startSoundSync = false;
+            setSyncMode(3); //off
             player.setPosition(0.0);
             player.setPaused(true);
         }
@@ -185,7 +235,7 @@ void ofApp::updateUDP() {
 
 //--------------------------------------------------------------
 void ofApp::setupCommonState() {
-    mCommon->startSoundSync = false;
+    setSyncMode(mCurrSyncMode);
 }
 
 //--------------------------------------------------------------
@@ -292,20 +342,36 @@ void ofApp::setupAudioSystem() {
     // audio setup for testing audio file stream 
     ofSoundStreamSettings soundSettings;
     soundSettings.numInputChannels = 0;
-    soundSettings.numOutputChannels = 2;
+    soundSettings.numOutputChannels = 4;
     soundSettings.sampleRate = player.getSoundFile().getSampleRate();
+    
+    for (int i = 0; i < outDevices.size(); i++) {
+        if (outDevices[i].name == "Speakers (Realtek USB2.0 Audio)") {
+            outDeviceIndex = i;
+            break;
+        }
+    }
+    ofLog(OF_LOG_NOTICE) << "Sound Device Read: " << outDeviceIndex;
+    ofLog(OF_LOG_NOTICE) << outDevices[outDeviceIndex].name << std::endl;
+
     soundSettings.setOutDevice(outDevices[outDeviceIndex]);
 
     ofLog(OF_LOG_NOTICE) << " Sample Rate Sound File " << std::endl;
     ofLog(OF_LOG_NOTICE) << player.getSoundFile().getSampleRate() << std::endl;
+    ofLog(OF_LOG_NOTICE) << player.getSoundFile().getNumChannels() << std::endl;
+    ofLog(OF_LOG_NOTICE) << player.getSoundFile().getNumFrames() << std::endl;
 
-    soundSettings.bufferSize = 512;// 256
+    soundSettings.bufferSize = 512;// 512;// 256
     soundSettings.numBuffers = 2; //2
 
-    player.volume = 0.3; //.3
+    if (mMasterUDP) {
+        player.volume = 0.3;
+    }
+    else {
+        player.volume = 0.0; //.3
+    }
 
     stream.setup(soundSettings);
-
     stream.setOutput(output);
 
     if (player.isLoaded()) {
@@ -337,7 +403,6 @@ void ofApp::setupGui(){
     }
     
     parameters.add(mMasterAudio.set("Master Audio", 0, 0, 1.0));
-    
     parameters.add(player.volume);
   
     //add listeners
@@ -401,8 +466,9 @@ void ofApp::drawGui() {
         ofDrawBitmapString("fps: " + to_string(ofGetFrameRate()), 10, 15);
         ofDrawBitmapString(to_string(player.getPositionMS())+ "  "+to_string(player.getDurationMS()), 10, 30);
         ofDrawBitmapString("Time: " + to_string(mStartMS), 10, 45);
-        ///ofDrawBitmapString("Frame: " + to_string(cur_frame) + " - " + to_string(mMinFrame), 10, 30);
-
+        ofDrawBitmapString("L Count: " + to_string(mLoopCount), 10, 60);
+        ofDrawBitmapString("Frame : " + to_string(mCommon->commonFrame)+" "+ to_string(mCommon->maxFrames), 10, 60);
+        
 
         ofDrawBitmapString(ofPath, 10, 470);
         ofDrawBitmapString("Current Sequence Name: "+mCommon->mCurrentSeqName, 10, 230);
@@ -426,10 +492,19 @@ void ofApp::drawGui() {
             ofDrawRectangle(355, 120, 30, 30);
         }
 
-        if (mLockfpsSound) {
-            ofSetColor(255);
-            ofDrawBitmapString("lock fps sound", 350, 70);
-        }
+       
+         ofSetColor(255);
+         if (mCurrSyncMode == 0) {
+             ofDrawBitmapString("Sync Audio", 350, 70);
+         }
+         else if (mCurrSyncMode == 1) {
+             ofDrawBitmapString("Sync Frame Update", 350, 70);
+         }
+         else if (mCurrSyncMode == 2) {
+             ofDrawBitmapString("Sync Audio UDP", 350, 70);
+         }
+
+            
 
         
         if (mSlaveUDP) {
@@ -454,11 +529,7 @@ void ofApp::stopAudio() {
         player.setPosition(0.0);
         player.setPaused(true);
 
-        //start video loop
-        mUDPSoundSync = false;
-
-        //send UDP start
-        mCommon->startSoundSync = false;
+        setSyncMode(3);
 
         string message = "s";
         udpSendLeft.Send(message.c_str(), message.length());
@@ -483,9 +554,7 @@ void ofApp::loadSequence(int id) {
         player.volume.setName(mCommon->mCurrentSeqName);
 
         //send to activate video 
-        mUDPSoundSync = false;
-        mCommon->startSoundSync = false;
-        mVideoSyncPlaying = false;
+        setSyncMode(mCurrSyncMode);
 
         std::fill(mCommon->vNewVideos.begin(), mCommon->vNewVideos.end(), true);
 
@@ -497,6 +566,51 @@ void ofApp::loadSequence(int id) {
             udpSendCenter.Send(message.c_str(), message.length());
         }
     }
+}
+//
+// mode 0 -> audio
+// mode 1 -> frame
+// mode 2 -> audio UDP
+// mode 3 -> all off
+void ofApp::setSyncMode(int value){
+    //syncs 
+    if (value == 0) {
+        mLockFpsUpdate = false;
+        mCommon->mFrameSync = false;
+
+        mLockFpsAudio = true;
+        mCommon->mAudioSync = true;
+
+        mLockFpsUDPAudio = false;
+    }
+    else if (value == 1) {
+        mLockFpsUpdate = true;
+        mCommon->mFrameSync = true;
+
+        mLockFpsAudio = false;
+        mCommon->mAudioSync = false;
+
+        mLockFpsUDPAudio = false;
+    }
+    else if (value == 2) {
+        mLockFpsUpdate = false;
+        mCommon->mFrameSync = false;
+
+        mLockFpsAudio = false;
+        mCommon->mAudioSync = false;
+
+        mLockFpsUDPAudio = true;
+    }
+    else if (value == 3) {
+        mLockFpsUpdate = false;
+        mCommon->mFrameSync = false;
+
+        mLockFpsAudio = false;
+        mCommon->mAudioSync = false;
+
+        mLockFpsUDPAudio = false;
+    }
+
 }
 
 
@@ -534,10 +648,6 @@ void ofApp::keyPressed(int key){
         loadSequence(9);
     }
 
-
-
-
-
     //audio
     if (key == ' ') {
     }
@@ -549,6 +659,11 @@ void ofApp::keyPressed(int key){
     if (key == 'g') {
         mDrawGUI = !mDrawGUI;
         ofLog(OF_LOG_NOTICE) << "gui";
+    }
+
+    if (key == 's') {
+        stopAudio();
+        mVideoSyncPlaying = false;
     }
     
     //send start
@@ -565,37 +680,53 @@ void ofApp::keyPressed(int key){
             mStartMS = 0.0;
 
             //start video loop
-            mUDPSoundSync = true;
-            mLockfpsSound = false;
+            mCurrSyncMode = 2;
+            setSyncMode(mCurrSyncMode);
 
-            //send UDP start
-            mCommon->startSoundSync = true;
+            mCommon->commonFrame = 0;
 
-            string message = "a";
+            string message = "d";
             udpSendLeft.Send(message.c_str(), message.length());
             udpSendCenter.Send(message.c_str(), message.length());
         }
     }
-    if (key == 's') {
-        stopAudio();
-        mLockfpsSound = false;
-        mVideoSyncPlaying = false;
+
+    if (key == 'f') {  //frame
+        if (mMasterUDP) {
+            ofLog(OF_LOG_NOTICE) << "send Master";
+
+            mVideoSyncPlaying = true;
+
+            //reset audio pos
+            player.setPaused(false);
+            player.setPosition(0.0);
+            player.play();
+            mStartMS = 0.0;
+            mCommon->commonFrame = 0;
+
+            //start video loop
+            mCurrSyncMode =  1;
+            setSyncMode(mCurrSyncMode);
+
+            string message = "d";
+            udpSendLeft.Send(message.c_str(), message.length());
+            udpSendCenter.Send(message.c_str(), message.length());
+        }
     }
     if (key == 'd') {
-
-
         if (mMasterUDP) {
             mVideoSyncPlaying = true;
             //sync audio
-            mUDPSoundSync = false;
-            mLockfpsSound = true;
-            mCommon->startSoundSync = true;
+
+            mCurrSyncMode = 0;
+            setSyncMode(mCurrSyncMode);
 
             //sound reset
             player.setPaused(false);
             player.setPosition(0.0);
             player.play();
             mStartMS = 0.0;
+            mCommon->commonFrame = 0;
 
             string message = "d";
             udpSendLeft.Send(message.c_str(), message.length());
@@ -613,10 +744,7 @@ void ofApp::keyPressed(int key){
             udpSendCenter.Send(message.c_str(), message.length());
         }
     }
-    
-    if (key == 'z') {
-        mLockfpsSound = !mLockfpsSound;
-    }
+   
 
     if(key == 'x'){
       //  bool play = true;
