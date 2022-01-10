@@ -91,6 +91,9 @@ public:
     // these are all subclasses of ofSoundObject
     ofxSoundPlayerObject player;
 
+    std::string mAudioDevice;
+    int mAudioOutputs;
+
     ofEventListener playerEndListener;
     void playerEnded(size_t& id);
 
@@ -148,6 +151,11 @@ public:
     std::vector<std::string> string_split(const std::string& str);
 
 
+    //
+    bool mLoadedVidoes;
+    int  initCouter;
+    void startMasterVideo();
+
     bool mVideoSyncPlaying;
     float mStartMS;
 
@@ -160,7 +168,12 @@ public:
     bool mLockFpsUpdate;
     bool mLockFpsAudio;
     bool mLockFpsUDPAudio;
+    bool mWaitPeriod;
     int mCurrSyncMode;
+
+    int mDeltaFrame;
+    float mDeltaSoundTime;
+
 
 };
 
@@ -170,17 +183,20 @@ public:
 
     CommonState() {
         mSequenceId = 0;
-        mAudioPos = 0;
+        audioPos = 0;
         commonFrame = 0;
         mFrameSync = false;
         mAudioSync = true;
     }
 
-    int commonFrame;
+   
     int maxFrames;
 
+    //frame current pos
+    int commonFrame;
+
     //video changes 
-    double mAudioPos;
+    double audioPos;
 
     //sync
     bool mAudioSync;
@@ -188,13 +204,16 @@ public:
 
     bool mNewVideo;
 
-    vector<bool> vNewVideos;
+    vector<bool> mNewVideos;
+    vector<bool> mLoadedVideos;
 
     //current window to activate
 
     //window id and name
     std::string mAlias;
     int mId;
+
+    std::string mVideoType;
 
 
 
