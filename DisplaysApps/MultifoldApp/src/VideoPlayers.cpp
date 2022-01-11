@@ -29,20 +29,18 @@ void VideoPlayers::loadVideo(std::string & name){
         ofLog(OF_LOG_NOTICE)<<"Player HPV";
        /// mHPVPlayer.init(HPV::NewPlayer());
         //mHPVPlayer.load(mVideoName);
-        mHPVPlayer.loadAsync(mVideoName);
         mHPVPlayer.setDoubleBuffered(true);
+        mHPVPlayer.loadAsync(mVideoName);
         mHPVPlayer.setLoopState(OF_LOOP_NONE);
         mHPVPlayer.play();
         mHPVPlayer.setPaused(true);
         //mHPVPlayer.setDoubleBuffered(true);
-      
-       
-       // 
+        
     }
     
     if(mPlayerType == 0){
         ofLog(OF_LOG_NOTICE)<<"Player HAP L: "<< mVideoName;
-        mHAPPlayer.load(mVideoName);
+        mHAPPlayer.loadAsync(mVideoName);
         mHAPPlayer.setLoopState(OF_LOOP_NONE);
         mHAPPlayer.setVolume(0.0);
     }
@@ -78,7 +76,7 @@ void VideoPlayers::closeVideo() {
     }
 }
 
-void VideoPlayers::setPosition(float value) {
+void VideoPlayers::setPosition(double value) {
     if (mPlayerType == 0) {
         mHAPPlayer.setPosition(value);
     }
@@ -93,6 +91,7 @@ void VideoPlayers::setPosition(float value) {
 //--------------------------------------------------------------
 void VideoPlayers::updateFrame(int64_t currFrame){
     if(mPlayerType == 0){
+        mHAPPlayer.setFrame(currFrame); //NOT WORKING
         //mHAPPlayer.setFrame(currFrame);
         //float pos = mHAPPlayer.getPosition();
         //mHAPPlayer.setPosition(pos + (1.0/25.0));

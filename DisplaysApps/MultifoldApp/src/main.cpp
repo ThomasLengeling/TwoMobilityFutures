@@ -117,7 +117,7 @@ int main( ){
 				settings.setGLVersion(4, 1);
 
 				mainWindow = ofCreateWindow(settings);
-				mainWindow->setVerticalSync(true);
+				mainWindow->setVerticalSync(false); //no sync b = true
 
 			}
 			ofLog(OF_LOG_NOTICE) << " " << std::endl;
@@ -168,11 +168,22 @@ int main( ){
 	std::string videoStr = "video.json";
 	ofFile videoFile(videoStr);
 	ofJson jsVideo;
+	std::string videoType;
+	std::string videoExtension;
 	if (videoFile.exists()) {
 		ofLog(OF_LOG_NOTICE) << " Reading Video File Names ";
 		videoFile >> jsVideo;
 		int j = 0;
 
+		//hpv
+		if (jsVideo["videotype"] == "hpv") {
+			videoType = "hpv";
+			videoExtension = "hpv";
+		}
+		if (jsVideo["videotype"] == "hap") {
+			videoType = "hap";
+			videoExtension = "mov";
+		}
 		//read sequence
 		for (auto& sequence : jsVideo["sequence"]) {
 			std::string name = sequence["name"];
@@ -205,9 +216,11 @@ int main( ){
 	commonState->mCurrentSeqName = sequenceName[0];
 	commonState->mSequenceId = 0;
 	commonState->mId = displayId;
+	commonState->mVideoType = videoType;
 
 	for (int i = 0; i < 3; i++) {
-		commonState->vNewVideos.push_back(false);
+		commonState->mNewVideos.push_back(false);
+		commonState->mLoadedVideos.push_back(false);
 	}
 
 	std::vector<std::string> tmpNames;
@@ -255,17 +268,17 @@ int main( ){
 					std::string seqName = seqNam.second;
 					
 					if (d.id == 0) {  //displays 1-3
-						std::string path = "video/" + seqName + "/" + seqName + "_" + videoNamesMap[j];
+						std::string path = "video/" + seqName + "/" + seqName + "_" + videoNamesMap[j] + "." + videoExtension;
 						ofLog(OF_LOG_NOTICE) << "Adding file: " << seqNam.first << " " << seqNam.second << " " << j << " " << path;
 						videoApp->addSequence(path);
 					}
 					if (d.id == 1) { //diplays 4-6
-						std::string path = "video/" + seqName + "/" + seqName + "_" + videoNamesMap[j + 3];
+						std::string path = "video/" + seqName + "/" + seqName + "_" + videoNamesMap[j + 3] +"." + videoExtension;
 						ofLog(OF_LOG_NOTICE) << "Adding file: " << seqNam.first << " " << seqNam.second << " " << j + 3 << " " << path;
 						videoApp->addSequence(path);
 					}
 					if (d.id == 2) { //displays 7-9
-						std::string path = "video/" + seqName + "/" + seqName + "_" + videoNamesMap[j + 6];
+						std::string path = "video/" + seqName + "/" + seqName + "_" + videoNamesMap[j + 6] +"." + videoExtension;
 						ofLog(OF_LOG_NOTICE) << "Adding file: " << seqNam.first << " " << seqNam.second << " " << j + 6 << " " << path;
 						videoApp->addSequence(path);
 					}
