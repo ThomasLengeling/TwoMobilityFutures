@@ -1,7 +1,6 @@
 #include "ofApp.h"
 
-void ofApp::setup()
-{
+void ofApp::setup() {
     string testVideo = "videos/A001C000574.mov";
     player.load(testVideo);
 
@@ -11,10 +10,8 @@ void ofApp::setup()
     getVideos();
 }
 
-void ofApp::update()
-{
-    if (useSerial)
-        updateSerial();
+void ofApp::update() {
+    if (useSerial) updateSerial();
 
     // TODO: handshake not fully implemented
     // if (!completedHandshake)
@@ -25,8 +22,7 @@ void ofApp::update()
     player.update();
 }
 
-void ofApp::draw()
-{
+void ofApp::draw() {
     player.draw(0, 0, videoWidth, videoHeight);
     gui.draw();
     scrub.draw();
@@ -37,49 +33,41 @@ void ofApp::draw()
 -- Serial --
 */
 
-void ofApp::initSerial()
-{
-    if (useSerial)
-    {
+void ofApp::initSerial() {
+    if (useSerial) {
         int baud = 9600;
         mserial.setup(0, baud);
     }
 }
 
 // Read/ write serial
-void ofApp::updateSerial()
-{
-    if (mserial.available())
-    {
+void ofApp::updateSerial() {
+    if (mserial.available()) {
         // TODO: not fully implemented on arduino end
-        if (!completedHandshake){
+        if (!completedHandshake) {
             requestHandshake();
         }
         mserial.readBytes(receivedData, 10);
         cout << receivedData;
         cout << "\n";
         cout.flush();
-        
-        if (receivedData == (char *)handshakeMessage)
-        {
+
+        if (receivedData == (char *)handshakeMessage) {
             completedHandshake = true;
         }
-        
+
         // NOTE: only triggered by GUI
-        if (ledButtonOn)
-        {
+        if (ledButtonOn) {
             unsigned char myByte = 1;
             mserial.writeByte(myByte);
             printf("on\n");
         }
-        if (ledButtonOff)
-        {
+        if (ledButtonOff) {
             unsigned char myByte = 2;
             mserial.writeByte(myByte);
             printf("off\n");
         }
-        if (ledButtonBreathe)
-        {
+        if (ledButtonBreathe) {
             unsigned char myByte = 3;
             mserial.writeByte(myByte);
             printf("breath\n");
@@ -90,18 +78,16 @@ void ofApp::updateSerial()
 
 // Initilize handshake with Teensy
 // TODO: not fully implemented on Teensy side
-void ofApp::requestHandshake()
-{
+void ofApp::requestHandshake() {
     cout << "requesting handshake\n";
     mserial.writeByte(handshakeMessage);
 }
 
-/* 
+/*
 -- GUI --
 */
 
-void ofApp::initGui()
-{
+void ofApp::initGui() {
     gui.setup();
     videoGroup.setup("Video Controls");
     videoGroup.add(videoStartButton.setup("Start"));
@@ -124,33 +110,31 @@ void ofApp::initGui()
     scrubber.addListener(this, &ofApp::updateScrubber);
 }
 
-void ofApp::updateControls()
-{
-    if (videoStartButton && !player.isPlaying())
-    {
+void ofApp::updateControls() {
+    if (videoStartButton && !player.isPlaying()) {
         printf("start\n");
         cout.flush();
         player.play();
     }
-    if (videoStopButton)
-    {
+    if (videoStopButton) {
         printf("stop\n");
         cout.flush();
         player.stop();
     }
 }
 
-void ofApp::updateScrubber(int &value)
-{
+void ofApp::updateScrubber(int &value) {
     printf("set frame: %i\n", value);
     cout.flush();
     player.setFrame(scrubber);
 }
 
-void ofApp::drawStats()
-{
-    ofDrawBitmapString("Video Speed: " + std::to_string(player.getSpeed()), 20, videoHeight + 20);
-    ofDrawBitmapString("Video Frame: " + std::to_string(player.getCurrentFrame()), 20, videoHeight + 35);
+void ofApp::drawStats() {
+    ofDrawBitmapString("Video Speed: " + std::to_string(player.getSpeed()), 20,
+                       videoHeight + 20);
+    ofDrawBitmapString(
+        "Video Frame: " + std::to_string(player.getCurrentFrame()), 20,
+        videoHeight + 35);
 }
 
 /*
@@ -158,18 +142,14 @@ void ofApp::drawStats()
 */
 
 // Load JSON containing effects to trigger at given frames
-void ofApp::loadJSON()
-{
+void ofApp::loadJSON() {
     string filepath = "test-video-timestamps.json";
     ofFile file(filepath);
-    if (!file.exists())
-        return;
+    if (!file.exists()) return;
 
     ofJson json = ofLoadJson(filepath);
-    for (auto &entry : json["timestamps"])
-    {
-        if (!entry.empty())
-        {
+    for (auto &entry : json["timestamps"]) {
+        if (!entry.empty()) {
             timestamp t;
             t.frame = entry["frame"];
             t.effect = entry["effect"];
@@ -179,30 +159,26 @@ void ofApp::loadJSON()
     }
 }
 
-// Retrieve list of videos in project data directory (e.g. used to select videos via GUI)
-void ofApp::getVideos()
-{
+// Retrieve list of videos in project data directory (e.g. used to select videos
+// via GUI)
+void ofApp::getVideos() {
     string path = "videos/";
     ofDirectory dir(path);
     dir.listDir();
-    for (int i = 0; i < dir.size(); i++)
-    {
+    for (int i = 0; i < dir.size(); i++) {
         ofLogNotice(dir.getPath(i));
     }
 }
 
 // Trigger specified effect at timestamp
-void ofApp::updateTimestamps()
-{
+void ofApp::updateTimestamps() {
     int currentFrame = player.getCurrentFrame();
-    for (auto timestamp = timestamps.begin(); timestamp != timestamps.end(); ++timestamp)
-    {
-        if (currentFrame == timestamp->frame)
-        {
+    for (auto timestamp = timestamps.begin(); timestamp != timestamps.end();
+         ++timestamp) {
+        if (currentFrame == timestamp->frame) {
             mserial.writeByte((char)timestamp->code);
             printf("%c", timestamp->effect.c_str());
             cout.flush();
         }
     }
 }
-
