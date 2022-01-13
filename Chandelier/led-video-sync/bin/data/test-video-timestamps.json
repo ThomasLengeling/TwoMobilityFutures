@@ -1,0 +1,132 @@
+{
+  "title": "test",
+  "filename": "videos/A001C000574.mov",
+  "code_reference": [
+    { "on": 1 },
+    { "off": 2 },
+    { "breath": 3 },
+    { "flicker": 4 },
+    { "strobe": 5 },
+    { "random_strobe": 6 }
+  ],
+  "timestamps": [
+    {
+      "frame": 772,
+      "effect": "on",
+      "code": 1
+    },
+    {
+      "frame": 797,
+      "effect": "off",
+      "code": 2
+    },
+    {
+      "frame": 804,
+      "effect": "flicker",
+      "code": 4
+    },
+    {
+      "frame": 830,
+      "effect": "off",
+      "code": 2
+    },
+    {
+      "frame": 832,
+      "effect": "on",
+      "code": 1
+    },
+    {
+      "frame": 842,
+      "effect": "off",
+      "code": 2
+    },
+    {
+      "frame": 846,
+      "effect": "flicker",
+      "code": 4,
+      "intensity": 1,
+      "period": 2
+    },
+    {
+      "frame": 880,
+      "effect": "off",
+      "code": 2
+    },
+    {
+      "frame": 882,
+      "effect": "flicker",
+      "code": 4
+    },
+    {
+      "frame": 917,
+      "effect": "off",
+      "code": 2
+    },
+    {
+      "frame": 920,
+      "effect": "flicker",
+      "code": 4
+    },
+    {
+      "frame": 950,
+      "effect": "off",
+      "code": 2
+    },
+    {
+      "frame": 952,
+      "effect": "flicker",
+      "code": 4
+    },
+    {
+      "frame": 956,
+      "effect": "off",
+      "code": 2
+    },
+    {
+      "frame": 959,
+      "effect": "flicker",
+      "code": 4
+    },
+    {
+      "frame": 971,
+      "effect": "off",
+      "code": 2
+    },
+    {
+      "frame": 973,
+      "effect": "flicker",
+      "code": 4
+    },
+    {
+      "frame": 978,
+      "effect": "off",
+      "code": 2
+    },
+    {
+      "frame": 982,
+      "effect": "flicker",
+      "code": 4
+    },
+    {
+      "frame": 985,
+      "effect": "off",
+      "code": 2
+    },
+    {
+      "frame": 987,
+      "effect": "flicker",
+      "code": 4
+    },
+    {
+      "frame": 998,
+      "effect": "off",
+      "code": 2
+    },
+    {
+      "frame": 1000,
+      "effect": "on",
+      "code": 1
+    }
+
+  ]
+}
