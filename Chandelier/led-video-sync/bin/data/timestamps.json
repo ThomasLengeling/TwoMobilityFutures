@@ -1,0 +1,22 @@
+{
+  "code_reference": [
+    { "on": 1 },
+    { "off": 2 },
+    { "breath": 3 },
+    { "flicker": 4 },
+    { "strobe": 5 },
+    { "random_strobe": 6 }
+  ],
+  "videos": [
+    {
+      "title": "test",
+      "filename": "videos/A001C000574.mov",
+      "timestamps": [
+        {
+          "frame": 772,
+          "effect": "on"
+        }
+      ]
+    }
+  ]
+}
