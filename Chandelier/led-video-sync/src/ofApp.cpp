@@ -130,11 +130,8 @@ void ofApp::updateScrubber(int &value) {
 }
 
 void ofApp::drawStats() {
-    ofDrawBitmapString("Video Speed: " + std::to_string(player.getSpeed()), 20,
-                       videoHeight + 20);
-    ofDrawBitmapString(
-        "Video Frame: " + std::to_string(player.getCurrentFrame()), 20,
-        videoHeight + 35);
+    ofDrawBitmapString("Video Speed: " + std::to_string(player.getSpeed()), 20, videoHeight + 20);
+    ofDrawBitmapString("Video Frame: " + std::to_string(player.getCurrentFrame()), 20, videoHeight + 35);
 }
 
 /*
@@ -173,8 +170,7 @@ void ofApp::getVideos() {
 // Trigger specified effect at timestamp
 void ofApp::updateTimestamps() {
     int currentFrame = player.getCurrentFrame();
-    for (auto timestamp = timestamps.begin(); timestamp != timestamps.end();
-         ++timestamp) {
+    for (auto timestamp = timestamps.begin(); timestamp != timestamps.end(); ++timestamp) {
         if (currentFrame == timestamp->frame) {
             mserial.writeByte((char)timestamp->code);
             printf("%c", timestamp->effect.c_str());
