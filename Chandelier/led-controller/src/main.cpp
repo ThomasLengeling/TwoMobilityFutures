@@ -26,8 +26,7 @@ JLed led14 = JLed(pins[13]);
 JLed led15 = JLed(pins[14]);
 JLed led16 = JLed(pins[15]);
 
-JLed leds[] = {led1, led2,  led3,  led4,  led5,  led6,  led7,  led8,
-               led9, led10, led11, led12, led13, led14, led15, led16};
+JLed leds[] = {led1, led2, led3, led4, led5, led6, led7, led8, led9, led10, led11, led12, led13, led14, led15, led16};
 
 auto sequence = JLedSequence(JLedSequence::eMode::PARALLEL, leds);
 
