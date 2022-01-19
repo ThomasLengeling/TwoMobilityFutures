@@ -47,6 +47,7 @@ void ofApp::setup(){
     mLockFpsUDPAudio = false;
     mLoadedVidoes = true;
     mWaitPeriod = false;
+    mAudioDone = false;
     mCurrSyncMode = 0;
 
     mLoopCount   = 0;
@@ -121,7 +122,6 @@ void ofApp::update() {
                 mCommon->commonFrame = mCommon->maxFrames;
 
                 mLockFpsUpdate = false;
-                player.setPosition(0.0);
                 ofLog(OF_LOG_NOTICE) << "Done Master Frame";
             }
 
@@ -164,12 +164,13 @@ void ofApp::update() {
             }
         }
         //wait and reset
-        if (mWaitPeriod) {
+        if (mWaitPeriod && mAudioDone) {
             initCouter++;
             if (initCouter > 25 * 5) {
                 ofLog(OF_LOG_NOTICE) << "Reset Play";
 
                 string message = "d " + to_string(mCurrSyncMode);
+              
                 udpSendLeft.Send(message.c_str(), message.length());
                 udpSendCenter.Send(message.c_str(), message.length());
 
@@ -179,14 +180,20 @@ void ofApp::update() {
 
                 //sound reset
                 //player.setPaused(false);
-                player.setPosition(0.0);
-                player.play();
+                if (player.isLoaded()) {
+                    player.setPosition(0.0);
+                    player.play();
+                }
+                else {
+                    ofLog(OF_LOG_NOTICE) << "Error loading sound on reset";
+                }
                 mStartMS = 0.0;
                 mCommon->commonFrame = 0;
 
                 mLoopCount++;
                 initCouter = 0;
                 mWaitPeriod = false;
+                mAudioDone = false;
             }
         }
     }
@@ -218,7 +225,7 @@ void ofApp::updateUDP() {
     char udpMessage[10000];
     udpReceiver.Receive(udpMessage, 10000);
     string message = udpMessage;
-    if (message != "") {
+    if (message != "" && message.size() >=1) {
        // ofLog(OF_LOG_NOTICE) << "GOT UDP MSG : " << message.size() << " " << message;
 
         //handshake
@@ -243,10 +250,11 @@ void ofApp::updateUDP() {
             //sound reset
             std::fill(mCommon->mLoadedVideos.begin(), mCommon->mLoadedVideos.end(), true);
             mCommon->commonFrame = 0;
-            player.setPaused(false);
-            player.setPosition(0.0);
-            player.setVolume(0.0);
-            player.play();
+            if (player.isLoaded()) {
+                player.setPosition(0.0);
+                player.setVolume(0.0);
+                player.play();
+            }
 
         }
 
@@ -399,6 +407,8 @@ void ofApp::setupAudioSystem() {
     ofSoundStreamSettings soundSettings;
     soundSettings.numInputChannels = 0;
     soundSettings.numOutputChannels = 4;
+    soundSettings.bufferSize = 512;// 512;// 256
+    soundSettings.numBuffers = 2; //2
     soundSettings.sampleRate = player.getSoundFile().getSampleRate();
     
     for (int i = 0; i < outDevices.size(); i++) {
@@ -406,7 +416,11 @@ void ofApp::setupAudioSystem() {
             outDeviceIndex = i;
             break;
         }
+        else {
+            outDeviceIndex = 0;
+        }
     }
+    
     ofLog(OF_LOG_NOTICE) << "Sound Device Read: " << outDeviceIndex;
     ofLog(OF_LOG_NOTICE) << outDevices[outDeviceIndex].name << std::endl;
 
@@ -420,29 +434,31 @@ void ofApp::setupAudioSystem() {
     ofLog(OF_LOG_NOTICE) << player.getSoundFile().getNumChannels() << std::endl;
     ofLog(OF_LOG_NOTICE) << player.getSoundFile().getNumFrames() << std::endl;
 
-    soundSettings.bufferSize = 512;// 512;// 256
-    soundSettings.numBuffers = 2; //2
 
     if (mMasterUDP) {
-        player.volume = 0.3;
+        player.volume = 0.0;
     }
     else {
         player.volume = 0.0; //.3
     }
 
-    stream.setup(soundSettings);
-    stream.setOutput(output);
-
+    
     if (player.isLoaded()) {
-        player.connectTo(output);
+        ofxSoundObject& playerOutput = output.getOrCreateChannelGroup({ 0, 1, 2, 3 });
+        player.connectTo(playerOutput);
+
+        // set if you want to either have the player looping (playing over and over again) or not (stop once it reaches the its end).
+
+        player.setLoop(false);
         ofLog(OF_LOG_NOTICE) << "Audio added to player: ";
     }
     else {
         ofLog(OF_LOG_NOTICE) << "Error loading adding player to Device output ";
     }
 
-    // set if you want to either have the player looping (playing over and over again) or not (stop once it reaches the its end).
-    player.setLoop(false);
+    stream.setup(soundSettings);
+    stream.setOutput(output);
+
 
     if (!player.getIsLooping()) {
         // if the player is not looping you can register  to the end event, which will get triggered when the player reaches the end of the file.
@@ -514,8 +530,8 @@ void ofApp::playVideos(bool & value){
 void ofApp::playerEnded(size_t& id) {
     // This function gets called when the player ends. You can do whatever you need to here.
     // This event happens in the main thread, not in the audio thread.
-    cout << "the player's instance " << id << "finished playing" << endl;
-
+    ofLog(OF_LOG_NOTICE) << "the player's instance " << id << "finished playing" << endl;
+    mAudioDone = true;
 }
 
 //--------------------------------------------------------------
@@ -594,9 +610,12 @@ void ofApp::startMasterVideo() {
     mVideoSyncPlaying = true;
 
     //reset audio pos
-    player.setPaused(false);
-    player.setPosition(0.0);
-    player.play();
+    if (player.isLoaded()) {
+        player.setPaused(false);
+        player.setPosition(0.0);
+        player.play();
+    }
+   
     mStartMS = 0.0;
     mCommon->commonFrame = 0;
 
