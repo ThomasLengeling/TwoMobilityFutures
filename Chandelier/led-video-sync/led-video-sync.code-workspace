@@ -1,0 +1,38 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "${workspaceRoot}/../../../../libs/openFrameworks"
+		},
+		{
+			"path": "${workspaceRoot}/../../../../addons"
+		},
+		{
+			"name": "aom_serial-mode-test",
+			"path": "../hardware/aom_serial-mode-test"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"atomic": "cpp",
+			"__node_handle": "cpp",
+			"__split_buffer": "cpp",
+			"array": "cpp",
+			"deque": "cpp",
+			"filesystem": "cpp",
+			"iterator": "cpp",
+			"queue": "cpp",
+			"stack": "cpp",
+			"string": "cpp",
+			"string_view": "cpp",
+			"unordered_map": "cpp",
+			"vector": "cpp",
+			"stdexcept": "cpp",
+			"iosfwd": "cpp",
+			"ostream": "cpp",
+			"*.tcc": "cpp"
+		}
+	}
+}
