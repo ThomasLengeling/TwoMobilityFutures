@@ -6,9 +6,9 @@
       "decorated": 0,
       "numscreen": 3,
       "type": "individual",
-      "alias": "center",
-      "id": 1,
-      "posx": 8400
+      "alias": "left",
+      "id": 0,
+      "posx": 1920
     },
     {
       "width": 640,
@@ -18,15 +18,15 @@
       "type": "main",
       "alias": "main",
       "id": -1,
-      "posx": 640
+      "posx": 0
     }
   ],
   "network": {
     "ip": "127.0.0.1",
     "port0": 15998,
     "port1": 15999,
-    "type": "slave",
-    "id":1
+    "type": "master",
+    "id": 0
   },
   "position": {
     "x": 0,
