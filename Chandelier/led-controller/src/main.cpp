@@ -2,15 +2,11 @@
 #include <jled.h>
 bool startProcess = false;
 
-enum lightMode
-{
-    ON = 1,
-    OFF,
-    BREATH,
-    FLICKER,
-    STROBE,
-    RANDOM_STROBE
-};
+<<<<<<< HEAD
+enum lightMode { ON = 1, OFF, BREATH, FLICKER, STROBE, RANDOM_STROBE };
+=======
+enum lightMode { ON = 1, OFF, BREATH, FLICKER, STROBE, RANDOM_STROBE };
+>>>>>>> 87eec27527d7346a99056a63bd9db4a259d9c5ce
 
 lightMode currentMode = OFF;
 const int LED_COUNT = 16;
@@ -38,11 +34,9 @@ JLed leds[] = {led1, led2, led3, led4, led5, led6, led7, led8, led9, led10, led1
 
 auto sequence = JLedSequence(JLedSequence::eMode::PARALLEL, leds);
 
-void setup()
-{
+void setup() {
     Serial.begin(9600);
-    for (int i = 0; i < LED_COUNT; i++)
-    {
+    for (int i = 0; i < LED_COUNT; i++) {
         pinMode(pins[i], OUTPUT);
     }
 }
@@ -51,84 +45,70 @@ void setup()
   LED Effects
 */
 
-void startOn()
-{
-    for (int i = 0; i < LED_COUNT; i++)
-    {
+void startOn() {
+    for (int i = 0; i < LED_COUNT; i++) {
         leds[i].On();
     }
 }
 
-void startOff()
-{
-    for (int i = 0; i < LED_COUNT; i++)
-    {
+void startOff() {
+    for (int i = 0; i < LED_COUNT; i++) {
         leds[i].Off();
     }
 }
 
-void startBreath()
-{
-    for (int i = 0; i < LED_COUNT; i++)
-    {
+void startBreath() {
+    for (int i = 0; i < LED_COUNT; i++) {
         leds[i].Breathe(1500).Repeat(6);
     }
 }
 
-void startFlicker()
-{
-    for (int i = 0; i < LED_COUNT; i++)
-    {
+void startFlicker() {
+    for (int i = 0; i < LED_COUNT; i++) {
         leds[i].Candle(6, 255).Repeat(6);
     }
 }
 
-void startStrobe()
-{
-}
+void startStrobe() {}
 
-void loop()
-{
+void loop() {
     int incomingByte = Serial.read();
     Serial.println(incomingByte);
 
-    if (incomingByte == 0)
-    {
+    if (incomingByte == 0) {
         Serial.write("handshake recieved");
         Serial.write(0);
     }
 
-    switch (incomingByte)
-    {
-    case 1:
-        currentMode = ON;
-        Serial.write("on");
-        startOn();
-        break;
-    case 2:
-        currentMode = OFF;
-        Serial.write("off");
-        startOff();
-        break;
-    case BREATH:
-        currentMode = BREATH;
-        Serial.write("breathe");
-        startBreath();
-        break;
-    case FLICKER:
-        currentMode = FLICKER;
-        Serial.write("flicker");
-        startFlicker();
-        break;
-    case STROBE:
-        currentMode = STROBE;
-        Serial.write("flicker");
-        startStrobe();
-        break;
+    switch (incomingByte) {
+        case 1:
+            currentMode = ON;
+            Serial.write("on");
+            startOn();
+            break;
+        case 2:
+            currentMode = OFF;
+            Serial.write("off");
+            startOff();
+            break;
+        case BREATH:
+            currentMode = BREATH;
+            Serial.write("breathe");
+            startBreath();
+            break;
+        case FLICKER:
+            currentMode = FLICKER;
+            Serial.write("flicker");
+            startFlicker();
+            break;
+        case STROBE:
+            currentMode = STROBE;
+            Serial.write("flicker");
+            startStrobe();
+            break;
     }
 
-    for (int i = 0; i < LED_COUNT; i++)
-    {
+    for (int i = 0; i < LED_COUNT; i++) {
         leds[i].Update();
     }
 }
