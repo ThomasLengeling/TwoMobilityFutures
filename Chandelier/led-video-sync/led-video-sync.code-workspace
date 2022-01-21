@@ -32,6 +32,7 @@
 			"stdexcept": "cpp",
 			"iosfwd": "cpp",
 			"ostream": "cpp",
+<<<<<<< HEAD
 			"*.tcc": "cpp",
 			"__bit_reference": "cpp",
 			"__bits": "cpp",
@@ -97,6 +98,9 @@
 			"memory_resource": "cpp",
 			"stop_token": "cpp",
 			"cinttypes": "cpp"
+=======
+			"*.tcc": "cpp"
+>>>>>>> 87eec27527d7346a99056a63bd9db4a259d9c5ce
 		}
 	}
 }

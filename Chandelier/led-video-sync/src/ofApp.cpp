@@ -153,7 +153,7 @@ void ofApp::loadJSON() {
             effect e;
             e.frame = entry["frame"];
             e.type = entry["effect"];
-            t.code = entry["code"];
+            e.code = entry["code"];
             effects.push_back(t);
         }
     }

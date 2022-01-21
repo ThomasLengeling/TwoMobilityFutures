@@ -2,11 +2,7 @@
 #include <jled.h>
 bool startProcess = false;
 
-<<<<<<< HEAD
 enum lightMode { ON = 1, OFF, BREATH, FLICKER, STROBE, RANDOM_STROBE };
-=======
-enum lightMode { ON = 1, OFF, BREATH, FLICKER, STROBE, RANDOM_STROBE };
->>>>>>> 87eec27527d7346a99056a63bd9db4a259d9c5ce
 
 lightMode currentMode = OFF;
 const int LED_COUNT = 16;
