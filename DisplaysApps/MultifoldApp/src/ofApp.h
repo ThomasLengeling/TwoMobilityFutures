@@ -87,7 +87,7 @@ public:
     void loadAudio(int seq);
 
     ofSoundStream stream;
-    ofxSoundOutput output;
+    ofxSoundOutputMultiplexer output; //
     // these are all subclasses of ofSoundObject
     ofxSoundPlayerObject player;
 
@@ -116,6 +116,7 @@ public:
     //send = true, receiver = false;
     bool mMasterUDP; //sender or receiver
     bool mSlaveUDP;
+    bool   mAudioDone;
 
     //master send to center and left
     int mUDPPortCenter;
@@ -197,6 +198,7 @@ public:
 
     //video changes 
     double audioPos;
+
 
     //sync
     bool mAudioSync;
