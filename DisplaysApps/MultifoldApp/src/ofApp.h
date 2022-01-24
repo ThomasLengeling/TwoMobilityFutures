@@ -14,6 +14,7 @@
 #include "ofxGui.h"
 #include "ofxOsc.h"
 #include "ofxNetwork.h"
+#include "Chandelier.h"
 
 #include "ofxAudioFile.h"
 #include "ofxSoundPlayerObject.h"
@@ -61,6 +62,13 @@ public:
     int mMinFrame;
 
     //debug and release mode
+
+    ofxPanel mGui;
+    bool mDrawGUI;
+
+    void setupGui();
+    void drawGui();
+
     ofParameterGroup      parameters;     
     ofParameter<bool>     mPlayVideos;
     ofParameter<bool>     mResetVideos;
@@ -68,11 +76,7 @@ public:
     ofParameter<float>    mMasterAudio;
     ofParameter<float>    mGainAudio;
     
-    ofxPanel mGui;
-    bool mDrawGUI;
 
-    void setupGui();
-    void drawGui();
     
     void resetVideos(bool & value);
     void playVideos(bool & value);
@@ -144,7 +148,7 @@ public:
     bool            mInitialize;
     float           mInitTimer;
 
-
+    //shared memory
     void setupCommonState();
     shared_ptr<CommonState> mCommon;
 
@@ -152,7 +156,7 @@ public:
     std::vector<std::string> string_split(const std::string& str);
 
 
-    //
+    //video clock values
     bool mLoadedVidoes;
     int  initCouter;
     void startMasterVideo();
@@ -175,10 +179,15 @@ public:
     int mDeltaFrame;
     float mDeltaSoundTime;
 
+    //Chandelier
+    ChandelierRef mChanderlier;
+    void setupChanderlier();
+    void updateChandelier();
 
 };
 
 //---------------------------
+//Common class that memory is shared across screens
 class CommonState{
 public:
 

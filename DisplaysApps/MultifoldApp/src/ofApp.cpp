@@ -23,6 +23,8 @@ void ofApp::setup(){
     //Video
     HPV::InitHPVEngine();
     
+    setupChanderlier();
+
     //load UDP information
     setupUDP();
 
@@ -37,6 +39,8 @@ void ofApp::setup(){
     
     //commom state
     setupCommonState();
+
+
 
     ofResetElapsedTimeCounter();
     mInitTimer = 14000;//seconds
@@ -70,12 +74,13 @@ void ofApp::update() {
     //UPDATE MASTER
     if (mMasterUDP) {
 
+        mChanderlier->updateSerial();
         //update audio pos
         double audioPos = player.getPosition();
         mMasterAudio.set(audioPos);
 
         //lock the fps with app frame rate
-        if (mLockFpsUpdate){
+        if (mLockFpsUpdate) {
             mCommon->commonFrame++;
 
             //reset
@@ -83,10 +88,14 @@ void ofApp::update() {
                 mCommon->commonFrame = mCommon->maxFrames;
                 mLockFpsUpdate = false;
                 mWaitPeriod = true;
+
+                //chandelier update based on the frame
+                mChanderlier->updateTimeStamp(mCommon->commonFrame);
+
                 ofLog(OF_LOG_NOTICE) << "Done Master Frame";
             }
 
-            //send error delta
+            //send error delta to salves
             if (mCommon->commonFrame % 15 == 0) {
                 string message = "e " + to_string(mCommon->commonFrame) + " " + to_string(audioPos);
                 udpSendLeft.Send(message.c_str(), message.length());
@@ -94,16 +103,13 @@ void ofApp::update() {
             }
 
         } //lock fps with audio update
-        else if(mLockFpsAudio){
+        else if (mLockFpsAudio) {
             mCommon->audioPos = audioPos;
 
         }  //lock the fps with udp audio
         else if (mLockFpsUDPAudio) {
             sendAudioPosUDP(audioPos);
-
         }
-
-
     }
 
       //if receiving udp then is a salve
@@ -114,7 +120,7 @@ void ofApp::update() {
 
         updateUDP();
 
-        if (mLockFpsUpdate) {
+        if (mLockFpsUpdate) { 
             mCommon->commonFrame++;
 
             //reset
@@ -160,7 +166,7 @@ void ofApp::update() {
                 initCouter = 0;
 
                 std::fill(mCommon->mLoadedVideos.begin(), mCommon->mLoadedVideos.end(), true);
-
+                cout.flush();
             }
         }
         //wait and reset
@@ -176,7 +182,9 @@ void ofApp::update() {
 
                 //syncs 
                 mCurrSyncMode = 1;
+                mStartMS = 0.0;
                 setSyncMode(mCurrSyncMode);
+
 
                 //sound reset
                 //player.setPaused(false);
@@ -186,11 +194,11 @@ void ofApp::update() {
                 }
                 else {
                     ofLog(OF_LOG_NOTICE) << "Error loading sound on reset";
-                }
-                mStartMS = 0.0;
+                };
                 mCommon->commonFrame = 0;
 
                 mLoopCount++;
+                cout.flush();
                 initCouter = 0;
                 mWaitPeriod = false;
                 mAudioDone = false;
@@ -434,7 +442,7 @@ void ofApp::setupAudioSystem() {
     ofLog(OF_LOG_NOTICE) << player.getSoundFile().getNumChannels() << std::endl;
     ofLog(OF_LOG_NOTICE) << player.getSoundFile().getNumFrames() << std::endl;
 
-
+    //audio volumen setup
     if (mMasterUDP) {
         player.volume = 0.0;
     }
@@ -442,7 +450,7 @@ void ofApp::setupAudioSystem() {
         player.volume = 0.0; //.3
     }
 
-    
+    //Configure audio channels
     if (player.isLoaded()) {
         ofxSoundObject& playerOutput = output.getOrCreateChannelGroup({ 0, 1, 2, 3 });
         player.connectTo(playerOutput);
@@ -479,7 +487,6 @@ void ofApp::setupGui(){
     
     parameters.add(mMasterAudio.set("Master Audio", 0, 0, 1.0));
     parameters.add(player.volume);
-  
     //add listeners
     if (mMasterUDP) {
         mPlayVideos.addListener(this, &ofApp::playVideos);
@@ -487,8 +494,11 @@ void ofApp::setupGui(){
     }
     mMasterAudio.addListener(this, &ofApp::audioSlider);
     
-    //setup gui
+ 
     mGui.setup(parameters);
+
+    mGui.add(&mChanderlier->ledGroup);
+    //setup gui
 
     //mGui.setSize(300, 200);
     mGui.setPosition(20, 95);
@@ -499,21 +509,18 @@ void ofApp::setupGui(){
     mGui.loadFromFile("settings.xml");
 }
 
+void ofApp::setupChanderlier() {
+    mChanderlier = Chandelier::create();
+    mChanderlier->initSerial(0, 9600);
+    mChanderlier->loadJson();
+    mChanderlier->initGui();
+}
+
 //--------------------------------------------------------------
 void ofApp::audioSlider(float & value){
     float audioPosition = float(value);
 
     player.setPosition(value);
-    //ofLog(OF_LOG_NOTICE) << "New Audio Position: "<< value;
-
-    //send new position to the slaves
-    //if (mMasterUDP) {
-    //    sendAudioPosUDP(0.0);
-    //}
-       
-    //update frame
-    //cur_frame = framePosition;
-    //ofLog(OF_LOG_NOTICE) <<framePosition;
 }
 //--------------------------------------------------------------
 void ofApp::resetVideos(bool & value){
@@ -523,7 +530,6 @@ void ofApp::resetVideos(bool & value){
 //--------------------------------------------------------------
 void ofApp::playVideos(bool & value){
   
-
 }
 
 //--------------------------------------------------------------
@@ -539,14 +545,13 @@ void ofApp::drawGui() {
     if (mDrawGUI) {
         ofSetColor(255);
         ofDrawBitmapString("Video fps: " + to_string(ofGetFrameRate()), 10, 10);
-        ofDrawBitmapString("D F: " + to_string(mDeltaFrame)+ " D S: "+to_string(mDeltaSoundTime), 10, 40);
-        ofDrawBitmapString("L Count: " + to_string(mLoopCount)+ " "+to_string(initCouter), 10, 55);
-        ofDrawBitmapString("Frame : " + to_string(mCommon->commonFrame)+" "+ to_string(mCommon->maxFrames), 10, 70);
+        ofDrawBitmapString("D F: " + to_string(mDeltaFrame) + " D S: " + to_string(mDeltaSoundTime), 10, 40);
+        ofDrawBitmapString("L Count: " + to_string(mLoopCount) + " " + to_string(initCouter), 10, 55);
+        ofDrawBitmapString("Frame : " + to_string(mCommon->commonFrame) + " " + to_string(mCommon->maxFrames), 10, 70);
         ofDrawBitmapString(to_string(player.getPositionMS()) + "  " + to_string(player.getDurationMS()), 10, 25);
 
-
         ofDrawBitmapString(ofPath, 10, 470);
-        ofDrawBitmapString("Current Sequence Name: "+mCommon->mCurrentSeqName, 10, 230);
+        ofDrawBitmapString("Current Sequence Name: " + mCommon->mCurrentSeqName, 10, 230);
 
         int i = 0;
         ofSetColor(200);
@@ -557,20 +562,19 @@ void ofApp::drawGui() {
             else {
                 ofSetColor(170);
             }
-            ofDrawBitmapString(to_string(i)+" "+name, 20, 250 + i*20);
+            ofDrawBitmapString(to_string(i) + " " + name, 20, 250 + i * 20);
             i++;
         }
 
         if (mMasterUDP) {
-            ofSetColor(255, 0, 0);
-            ofDrawBitmapString("Master "+to_string(mCommon->mId), 350, 100);
+            ofSetColor(225, 50, 50);
+            ofDrawBitmapString("Master " + to_string(mCommon->mId), 350, 100);
             ofDrawRectangle(355, 120, 30, 30);
+
+            ofDrawBitmapString("Video: " + mCommon->mVideoType, 350, 15);
+            ofDrawBitmapString("Audio: " + mAudioDevice + "O: " + to_string(mAudioOutputs), 350, 30);
+            ofDrawBitmapString("Serial Port: " +mChanderlier->getSerialName() + " "+to_string(mChanderlier->getSerialId())+" "+ to_string(mChanderlier->getBaudRate()), 350, 45);
         }
-
-       
-         ofDrawBitmapString("Video: "+mCommon->mVideoType, 350, 25);
-         ofDrawBitmapString("Audio: " + mAudioDevice +"O: "+to_string(mAudioOutputs), 350, 40);
-
 
          ofSetColor(255);
          if (mCurrSyncMode == 0) {
@@ -583,9 +587,6 @@ void ofApp::drawGui() {
              ofDrawBitmapString("Sync Audio UDP", 350, 70);
          }
 
-            
-
-        
         if (mSlaveUDP) {
             ofSetColor(255);
             ofDrawBitmapString("Slave " + to_string(mUDPPortReceiver)+"   "+to_string(mCommon->mId), 350, 100);

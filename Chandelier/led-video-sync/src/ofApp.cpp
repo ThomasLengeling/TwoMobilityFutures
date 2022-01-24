@@ -149,7 +149,7 @@ void ofApp::loadJSON() {
         if (!entry.empty()) {
             timestamp t;
             t.frame = entry["frame"];
-            t.effect = entry["effect"];
+            t.effect = entry["effect"].get<string>();
             t.code = entry["code"];
             timestamps.push_back(t);
         }
