@@ -1,5 +1,5 @@
 #include "Chandelier.h"
-
+#include "srtparser.h"
 
 Chandelier::Chandelier() {
     useSerial = false;;
@@ -144,7 +144,7 @@ void Chandelier::drawStats() {
 */
 
 // Load JSON containing effects to trigger at given frames
-void Chandelier::loadJson() {
+void Chandelier::loadJson(string jsonPath) {
     string filepath = "test-video-timestamps.json";
     ofFile file(filepath);
     if (file.exists()){
@@ -152,17 +152,36 @@ void Chandelier::loadJson() {
         ofJson json = ofLoadJson(filepath);
         for (auto& entry : json["timestamps"]) {
             if (!entry.empty()) {
-                timestamp t;
-                t.frame = entry["frame"];
-                t.effect = entry["effect"].get<string>();
-                t.code = entry["code"];
-                timestamps.push_back(t);
+                effect e;
+                e.frame = entry["frame"];
+                e.startTime = entry["frame"];
+                e.type = entry["effect"].get<string>();
+                e.code = entry["code"];
+                effects.push_back(t);
             }
         }
     }
     else {
         ofLog(OF_LOG_NOTICE) << " Error loading File" << filepath;
     }
+}
+
+void Chandelier::loadSubtitles(string srtPath){
+    SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(srtPath);
+    SubtitleParser *parser = subParserFactory->getParser();
+    vector<SubtitleItem *> sub = parser->getSubtitles();
+    cout << sub.size();
+    for (SubtitleItem *element : sub) {
+        vector<std::string> words = element->getIndividualWords();
+        if (words.empty()) continue;
+
+        effect e;
+        e.startTime = element->getStartTime();
+        e.type = words.front(); // name of effect
+        e.code = std::stoi(words.at(1)); // byte code TODO: create enum to perform string/ code lookup
+        effects.push_back(e);
+    }
+    cout.flush();
 }
 
 // Retrieve list of videos in project data directory (e.g. used to select videos
@@ -178,11 +197,28 @@ void Chandelier::getVideos() {
 
 // Trigger specified effect at timestamp
 void Chandelier::updateTimeStamp(int currentFrame) {
-    for (auto timestamp = timestamps.begin(); timestamp != timestamps.end(); ++timestamp) {
-        if (currentFrame == timestamp->frame) {
-            mSerial.writeByte((char)timestamp->code);
-            printf("%c", timestamp->effect.c_str());
+    for (auto effect = effects.begin(); effect != effects.end(); ++effect) {
+        if (currentFrame == effect->frame) {
+            mSerial.writeByte((char)effect->code);
+            printf("%c", effect->type.c_str());
             cout.flush();
         }
     }
+}
+
+// Trigger specified effect at timestamp
+void Chandelier::updateEffects(int currentFrame) {
+    float currentMillis = currentFrame/ frameRate * 1000;
+    for (auto effect = effects.begin(); effect != effects.end(); ++effect) {
+        if (currentMillis < effect->startTime)
+            continue;
+
+        mSerial.writeByte((char)effect->code);
+        printf("----------------------------------------");
+        printf("%c", effect->type.c_str());
+        printf("----------------------------------------");
+        effects.erase(effects.begin());
+        break;
+    }
+    cout.flush();
 }

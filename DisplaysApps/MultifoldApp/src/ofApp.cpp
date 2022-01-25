@@ -90,7 +90,7 @@ void ofApp::update() {
                 mWaitPeriod = true;
 
                 //chandelier update based on the frame
-                mChanderlier->updateTimeStamp(mCommon->commonFrame);
+                mChanderlier->updateEffects(mCommon->commonFrame);
 
                 ofLog(OF_LOG_NOTICE) << "Done Master Frame";
             }
@@ -512,7 +512,8 @@ void ofApp::setupGui(){
 void ofApp::setupChanderlier() {
     mChanderlier = Chandelier::create();
     mChanderlier->initSerial(0, 9600);
-    mChanderlier->loadJson();
+    // mChanderlier->loadJson();
+    mChanderlier->loadSubtitles('C:/Users/Bizon/Desktop/App/data/subtitles/woman-lights-test.srt');
     mChanderlier->initGui();
 }
 

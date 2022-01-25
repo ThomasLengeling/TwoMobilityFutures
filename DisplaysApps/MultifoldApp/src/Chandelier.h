@@ -16,12 +16,14 @@ class Chandelier;
 
 typedef std::shared_ptr<Chandelier> ChandelierRef;
 
-// Video choreography from JSON
-struct timestamp {
+    // Video choreography from .srt
+struct effect {
     int frame;
+    int startTime;
     int code;
-    std::string effect;
+    string type;
 };
+vector<effect> effects;
 
 class Chandelier {
 public:
@@ -29,17 +31,18 @@ public:
 
     static ChandelierRef create() {
         return std::make_shared<Chandelier>();
-
     }
 
     void initSerial(int portid, int baud);
     void initGui();
     void getVideos();
-    void loadJson();
+    void loadJson(string jsonPath);
+    void loadSubtitles(string srtPath);
     void drawStats();
     void updateSerial();
     void updateControls();
     void updateTimeStamp(int currentFrame);
+    void updateEffects(int currentFrame);
     void updateScrubber(int& value);
     void requestHandshake();
 
@@ -49,6 +52,8 @@ public:
     bool isSeralConnected() { return useSerial;};
 
     ofxGuiGroup ledGroup;
+    // TODO: temp fix, figure out how to determine millis in video
+    int frameRate = 24;
 
 private:
     vector<timestamp> timestamps;
