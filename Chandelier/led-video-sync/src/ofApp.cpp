@@ -1,13 +1,19 @@
 #include "ofApp.h"
+#include "srtparser.h"
 
 void ofApp::setup() {
-    string testVideo = "videos/A001C000574.mov";
-    player.load(testVideo);
+    string videoPath = "videos/A001C000574.mov";
+    string jsonPath = "test-video-timestamps.json";
+    string srtPath = "/Users/justinblinder/dev/medialab/TwoMobilityFutures/Chandelier/led-video-sync/bin/data/aom-test_SRT_English.srt";
 
+    player.load(videoPath);
     initGui();
     initSerial();
-    loadJSON();
+    // loadJSON(jsonPath);
+    loadSubtitles(srtPath);
     getVideos();
+
+    ofSetFrameRate(frameRate);
 }
 
 void ofApp::update() {
@@ -18,7 +24,8 @@ void ofApp::update() {
     //     return;
 
     updateControls();
-    updateTimestamps();
+    updateEffects();
+
     player.update();
 }
 
@@ -139,21 +146,39 @@ void ofApp::drawStats() {
 */
 
 // Load JSON containing effects to trigger at given frames
-void ofApp::loadJSON() {
-    string filepath = "test-video-timestamps.json";
-    ofFile file(filepath);
+void ofApp::loadJSON(string jsonPath) {
+    ofFile file(jsonPath);
     if (!file.exists()) return;
 
-    ofJson json = ofLoadJson(filepath);
+    ofJson json = ofLoadJson(jsonPath);
     for (auto &entry : json["timestamps"]) {
         if (!entry.empty()) {
-            timestamp t;
-            t.frame = entry["frame"];
-            t.effect = entry["effect"].get<string>();
-            t.code = entry["code"];
-            timestamps.push_back(t);
+            effect e;
+            e.frame = entry["frame"];
+            e.type = entry["effect"];
+            e.code = entry["code"];
+            effects.push_back(e);
         }
     }
+}
+
+// Load SubRip .srt file containing effects to trigger at given frames
+void ofApp::loadSubtitles(string srtPath) {
+    SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(srtPath);
+    SubtitleParser *parser = subParserFactory->getParser();
+    vector<SubtitleItem *> sub = parser->getSubtitles();
+    cout << sub.size();
+    for (SubtitleItem *element : sub) {
+        vector<std::string> words = element->getIndividualWords();
+        if (words.empty()) continue;
+
+        effect e;
+        e.startTime = element->getStartTime();
+        e.type = words.front(); // name of effect
+        e.code = std::stoi(words.at(1)); // byte code TODO: create enum to perform string/ code lookup
+        effects.push_back(e);
+    }
+    cout.flush();
 }
 
 // Retrieve list of videos in project data directory (e.g. used to select videos
@@ -168,13 +193,22 @@ void ofApp::getVideos() {
 }
 
 // Trigger specified effect at timestamp
-void ofApp::updateTimestamps() {
-    int currentFrame = player.getCurrentFrame();
-    for (auto timestamp = timestamps.begin(); timestamp != timestamps.end(); ++timestamp) {
-        if (currentFrame == timestamp->frame) {
-            mserial.writeByte((char)timestamp->code);
-            printf("%c", timestamp->effect.c_str());
-            cout.flush();
-        }
+void ofApp::updateEffects() {
+    float currentFrame = player.getCurrentFrame();
+    float currentMillis = currentFrame/ frameRate * 1000;
+    cout << "current frame " << currentFrame;
+    cout << "\ncurrent position " << currentMillis << "\n";
+    
+    for (auto effect = effects.begin(); effect != effects.end(); ++effect) {
+        if (currentMillis < effect->startTime)
+            continue;
+
+        mserial.writeByte((char)effect->code);
+        printf("----------------------------------------");
+        printf("%c", effect->type.c_str());
+        printf("----------------------------------------");
+        effects.erase(effects.begin());
+        break;
     }
+    cout.flush();
 }

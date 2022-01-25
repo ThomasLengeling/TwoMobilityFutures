@@ -7,7 +7,6 @@ Chandelier::Chandelier() {
     handshakeMessage = 's';
     mSerialId = 0;
     mSerialBaudRate = 9600;
-
 }
 //---------------------------------------------------------
 void Chandelier::initSerial(int portid, int baud) {
