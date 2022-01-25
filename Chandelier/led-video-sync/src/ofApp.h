@@ -11,8 +11,8 @@ class ofApp : public ofBaseApp {
     void initSerial();
     void initGui();
     void getVideos();
-    void loadJSON();
-    void loadSubtitles();
+    void loadJSON(string jsonPath);
+    void loadSubtitles(string srtPath);
     void drawStats();
     void updateSerial();
     void updateControls();
@@ -27,12 +27,13 @@ class ofApp : public ofBaseApp {
         int code;
         string type;
     };
-    vector<timestamp> effects;
+    vector<effect> effects;
 
     // Video
     ofVideoPlayer player;
     const int videoWidth = 2880 / 3;   // 1024;
     const int videoHeight = 1620 / 3;  // 435;
+    int frameRate = 24; // temp rate to calculate duration in millis, matches rate of test video
 
     // Gui
     ofxPanel gui;

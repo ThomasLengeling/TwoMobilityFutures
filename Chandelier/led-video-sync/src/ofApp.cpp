@@ -3,14 +3,18 @@
 #include "srtparser.h"
 
 void ofApp::setup() {
-    string testVideo = "videos/A001C000574.mov";
-    player.load(testVideo);
+    string videoPath = "videos/A001C000574.mov";
+    string jsonPath = "test-video-timestamps.json";
+    string srtPath = "/Users/justinblinder/dev/medialab/TwoMobilityFutures/Chandelier/led-video-sync/bin/data/aom-test_SRT_English.srt";
 
+    player.load(videoPath);
     initGui();
     initSerial();
-    loadJSON();
-    loadSubtitles();
+    // loadJSON(jsonPath);
+    loadSubtitles(srtPath);
     getVideos();
+
+    ofSetFrameRate(frameRate);
 }
 
 void ofApp::update() {
@@ -142,62 +146,37 @@ void ofApp::drawStats() {
 */
 
 // Load JSON containing effects to trigger at given frames
-void ofApp::loadJSON() {
-    string filepath = "test-video-timestamps.json";
-    ofFile file(filepath);
+void ofApp::loadJSON(string jsonPath) {
+    ofFile file(jsonPath);
     if (!file.exists()) return;
 
-    ofJson json = ofLoadJson(filepath);
+    ofJson json = ofLoadJson(jsonPath);
     for (auto &entry : json["timestamps"]) {
         if (!entry.empty()) {
             effect e;
             e.frame = entry["frame"];
             e.type = entry["effect"];
             e.code = entry["code"];
-            effects.push_back(t);
+            effects.push_back(e);
         }
     }
 }
 
 // Load SubRip .srt file containing effects to trigger at given frames
-void ofApp::loadSubtitles() {
-    SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(
-        "/Users/justinblinder/dev/medialab/TwoMobilityFutures/Chandelier/led-video-sync/bin/data/test.srt");
+void ofApp::loadSubtitles(string srtPath) {
+    SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(srtPath);
     SubtitleParser *parser = subParserFactory->getParser();
     vector<SubtitleItem *> sub = parser->getSubtitles();
     cout << sub.size();
     for (SubtitleItem *element : sub) {
-        // cout << "BEGIN" << endl;
-        // cout << "startString : " << element->getStartTimeString() << endl;
-        // cout << "start : " << element->getStartTime() << endl;
-        // cout << "endString : " << element->getEndTimeString() << endl;
-        // cout << "end : " << element->getEndTime() << endl;
-        // cout << "text : " << element->getText() << endl;
-        // cout << "justDialogue : " << element->getDialogue() << endl;
-        // cout << "words count : " << element->getWordCount() << endl;
-        // cout << "words :";
-
-        // format: "effect"
         vector<std::string> words = element->getIndividualWords();
         if (words.empty()) continue;
 
         effect e;
         e.startTime = element->getStartTime();
-        e.type = words.front();
-        effects.push_back(t);
-        
-        // for (std::string display : words) cout << display << ", ";
-
-        // cout << "speakerCount : " << element->getSpeakerCount() << endl;
-        // cout << "speakers : ";
-        // if (element->getSpeakerCount()) {
-        //     std::vector<std::string> name = element->getSpeakerNames();
-        //     for (std::string display : name) cout << display << ", ";
-        //     cout << endl;
-        // }
-
-        // cout << "ignore : " << element->element->getIndividualWords()() << endl;
-        // cout << "END" << endl << endl;
+        e.type = words.front(); // name of effect
+        e.code = std::stoi(words.at(1)); // byte code TODO: create enum to perform string/ code lookup
+        effects.push_back(e);
     }
     cout.flush();
 }
@@ -215,12 +194,21 @@ void ofApp::getVideos() {
 
 // Trigger specified effect at timestamp
 void ofApp::updateEffects() {
-    int currentFrame = player.getCurrentFrame();
+    float currentFrame = player.getCurrentFrame();
+    float currentMillis = currentFrame/ frameRate * 1000;
+    cout << "current frame " << currentFrame;
+    cout << "\ncurrent position " << currentMillis << "\n";
+    
     for (auto effect = effects.begin(); effect != effects.end(); ++effect) {
-        if (currentFrame == effect->frame) {
-            mserial.writeByte((char)effect->code);
-            printf("%c", effect->type.c_str());
-            cout.flush();
-        }
+        if (currentMillis < effect->startTime)
+            continue;
+
+        mserial.writeByte((char)effect->code);
+        printf("----------------------------------------");
+        printf("%c", effect->type.c_str());
+        printf("----------------------------------------");
+        effects.erase(effects.begin());
+        break;
     }
+    cout.flush();
 }
