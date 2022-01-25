@@ -1,6 +1,8 @@
 #sound
 *.wav
 *.mp3
+*.mov
+*.mp4
 
 #visual project
 *.sln
