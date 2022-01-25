@@ -53,13 +53,16 @@ void WindowVideoApp::setup() {
 
 void WindowVideoApp::update() {
 
+	//Sync video with frame count
 	if (mCommon->mFrameSync) {
 		mVideoPlayer->updateFrame(mCommon->commonFrame);
 	}
+	//Sync video with audio count
 	else if (mCommon->mAudioSync) {
 		mVideoPlayer->setPosition(mCommon->audioPos);
 	}
 
+	//if the videos have not been initilized yet then init
 	if(mCommon->mNewVideos[mId]){
 		mCurrentSetId = mCommon->mSequenceId;
 		if (mCurrentSetId < mVideoSets.size()) {
@@ -93,6 +96,7 @@ void WindowVideoApp::loadDebugImg() {
 //--------------------------------------------------------------
 void WindowVideoApp::draw() {
 
+	//draw the debug img
 	if (!mCommon->mLoadedVideos[mId]) {
 		mDebugImg.draw(0, 0, ofGetWindowWidth(), ofGetWindowHeight());
 	}

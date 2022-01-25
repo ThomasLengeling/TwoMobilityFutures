@@ -37,10 +37,10 @@ int main( ){
     int numScreens = 1;
 	int displayId;
 
-	ofColor colors[] = {ofColor(200), ofColor(255), ofColor(150)};
-    
+
+    //file the Display vector with data from the config file
     if (file.exists()) {
-       // ofLog(OF_LOG_NOTICE) << " Reading Config File " << configFile;
+        ofLog(OF_LOG_NOTICE) << " Reading Config File " << configFile;
         file >> js;
         
         windwoPos.x = js["position"]["x"];
@@ -58,7 +58,6 @@ int main( ){
 
 
 		//load individual windows
-		
 		int i = 0;
 		for (auto& windows : js["window"]) {
 			if (!windows.empty()) {
@@ -70,7 +69,6 @@ int main( ){
 				d.type = windows["type"].get<std::string>();
 				d.alias = windows["alias"].get<std::string>();
 				d.id = windows["id"];
-				d.bkgColor = colors[i];
 				d.posdisplay = windows["posx"];
 
 				ofLog(OF_LOG_NOTICE) << "Found  Window " << d.alias << " " <<d.id<<" "<< i;
@@ -88,13 +86,7 @@ int main( ){
 				i++;
 			}
 		}
-
-        
-        
-       // SystemVars::getInstance().numDisplays = numScreens;
-       
-        
-    }else{
+    }else{ //if not configuration file is found create a simple window
         ofLog(OF_LOG_NOTICE)<<"ERROR Reading Config File"<<std::endl;
         decorated  = false;
         windowSize = glm::vec2(1920, 1080);
@@ -165,6 +157,7 @@ int main( ){
 	std::map<int, std::string> sequenceName;
 	std::map<int, std::string> soundNameMap;
 
+	//load video data based on the number of displays and the number of sequence found in video.json
 	std::string videoStr = "video.json";
 	ofFile videoFile(videoStr);
 	ofJson jsVideo;
@@ -209,7 +202,7 @@ int main( ){
 	for (auto & files : videoNamesMap) {
 		ofLog(OF_LOG_NOTICE) << files.first <<" "<<files.second<<std::endl;
 	}
-
+	//---- Load common data that is shared with the indivual screesn and the main ofApp
 	ofLog(OF_LOG_NOTICE) << "Creating Windows Events " << std::endl;
 
 	shared_ptr<CommonState> commonState(new CommonState);
@@ -253,11 +246,9 @@ int main( ){
 				shared_ptr<WindowVideoApp> videoApp(new WindowVideoApp);
 				videoApp->mCommon = commonState;
 				videoApp->setId(j);
-				videoApp->setBackground(colors[0]); 
 				//videoApp->setVideoName(videoNamesMap[j]);
 
 				//add several sequences depending on how many sequences are available
-				
 				videoApp->mCommon->mCurrentSeqName = sequenceName[0];
 				videoApp->mCommon->mSequenceId = 0;
 				videoApp->mCommon->mAlias = d.alias;
