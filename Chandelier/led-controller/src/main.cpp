@@ -3,7 +3,7 @@
 bool startProcess = false;
 
 enum lightMode { ON = 1, OFF, BREATH, FLICKER, STROBE, RANDOM_STROBE };
-
+char* handshakeMessage = "s";
 lightMode currentMode = OFF;
 const int LED_COUNT = 16;
 // int pins[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -30,13 +30,6 @@ JLed leds[] = {led1, led2, led3, led4, led5, led6, led7, led8, led9, led10, led1
 
 auto sequence = JLedSequence(JLedSequence::eMode::PARALLEL, leds);
 
-void setup() {
-    Serial.begin(9600);
-    for (int i = 0; i < LED_COUNT; i++) {
-        pinMode(pins[i], OUTPUT);
-    }
-}
-
 /*
   LED Effects
 */
@@ -55,25 +48,46 @@ void startOff() {
 
 void startBreath() {
     for (int i = 0; i < LED_COUNT; i++) {
-        leds[i].Breathe(1500).Repeat(6);
+        leds[i].Breathe(5000).Forever();
     }
 }
 
 void startFlicker() {
     for (int i = 0; i < LED_COUNT; i++) {
-        leds[i].Candle(6, 255).Repeat(6);
+        leds[i].Candle(5, 255, 1000).Forever().DelayAfter(4000);
     }
 }
 
-void startStrobe() {}
+void startStrobe() {
+    for (int i = 0; i < LED_COUNT; i++) {
+        leds[i].Blink(50, 50).Forever();
+    }
+}
+
+void startRandomStrobe() {
+    for (int i = 0; i < LED_COUNT; i++) {
+        long ledOn = random(0, 2);
+        Serial.println(ledOn);
+        if (ledOn == 1)
+            analogWrite(pins[i], HIGH);
+        else
+            analogWrite(pins[i], LOW);
+    }
+}
+
+void setup() {
+    Serial.begin(9600);
+    for (int i = 0; i < LED_COUNT; i++) {
+        pinMode(pins[i], OUTPUT);
+    }
+}
 
 void loop() {
-    int incomingByte = Serial.read();
+    char incomingByte = Serial.read();
     Serial.println(incomingByte);
 
-    if (incomingByte == 0) {
-        Serial.write("handshake recieved");
-        Serial.write(0);
+    if (incomingByte == handshakeMessage) {
+        Serial.write("s");
     }
 
     switch (incomingByte) {
@@ -99,12 +113,21 @@ void loop() {
             break;
         case STROBE:
             currentMode = STROBE;
-            Serial.write("flicker");
+            Serial.write("strobe");
             startStrobe();
+            break;
+        case RANDOM_STROBE:
+            currentMode = RANDOM_STROBE;
+            Serial.write("random strobe");
+            startRandomStrobe();
             break;
     }
 
-    for (int i = 0; i < LED_COUNT; i++) {
-        leds[i].Update();
+    if (currentMode == RANDOM_STROBE) {
+        startRandomStrobe();
+    } else {
+        for (int i = 0; i < LED_COUNT; i++) {
+            leds[i].Update();
+        }
     }
 }
