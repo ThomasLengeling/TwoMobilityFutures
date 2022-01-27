@@ -71,6 +71,21 @@ void Chandelier::updateSerial() {
             mSerial.writeByte(myByte);
             printf("breath\n");
         }
+        if (ledButtonCandle) {
+            unsigned char myByte = 4;
+            mserial.writeByte(myByte);
+            printf("candle\n");
+        }
+        if (ledButtonStrobe) {
+            unsigned char myByte = 5;
+            mserial.writeByte(myByte);
+            printf("strobe\n");
+        }
+        if (ledButtonRandomStrobe) {
+            unsigned char myByte = 6;
+            mserial.writeByte(myByte);
+            printf("random strobe\n");
+        }
         cout.flush();
     }
 }
@@ -100,7 +115,7 @@ void Chandelier::initGui() {
     ledGroup.add(ledButtonBreathe.setup("LED Breathe"));
     ledGroup.add(ledButtonCandle.setup("LED Candle"));
     ledGroup.add(ledButtonStrobe.setup("LED Strobe"));
-
+    ledGroup.add(ledButtonRandomStrobe.setup("LED Random Strobe"));
     //gui.add(&videoGroup);
     //gui.add(&ledGroup);
 

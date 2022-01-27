@@ -71,6 +71,7 @@ private:
     ofxButton ledButtonBreathe;
     ofxButton ledButtonCandle;
     ofxButton ledButtonStrobe;
+    ofxButton ledButtonRandomStrobe;
 
     ofxPanel scrub;
     ofParameter<int> scrubber;
