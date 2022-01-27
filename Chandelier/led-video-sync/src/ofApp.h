@@ -50,6 +50,7 @@ class ofApp : public ofBaseApp {
     ofxButton ledButtonBreathe;
     ofxButton ledButtonCandle;
     ofxButton ledButtonStrobe;
+    ofxButton ledButtonRandomStrobe;
 
     ofxPanel scrub;
     ofParameter<int> scrubber;
