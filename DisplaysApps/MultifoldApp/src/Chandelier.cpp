@@ -1,5 +1,5 @@
 #include "Chandelier.h"
-#include "srtparser.h"
+
 
 Chandelier::Chandelier() {
     useSerial = false;;
@@ -49,10 +49,7 @@ void Chandelier::updateSerial() {
         if (!completedHandshake) {
             requestHandshake();
         }
-        mSerial.readBytes(receivedData, 10);
-        cout << receivedData;
-        cout << "\n";
-        cout.flush();
+        mSerial.readBytes(receivedData, 1);
 
         if (receivedData == (char*)handshakeMessage) {
             completedHandshake = true;
@@ -157,7 +154,7 @@ void Chandelier::loadJson(string jsonPath) {
                 e.startTime = entry["frame"];
                 e.type = entry["effect"].get<string>();
                 e.code = entry["code"];
-                effects.push_back(t);
+                effects.push_back(e);
             }
         }
     }
@@ -170,7 +167,7 @@ void Chandelier::loadSubtitles(string srtPath){
     SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(srtPath);
     SubtitleParser *parser = subParserFactory->getParser();
     vector<SubtitleItem *> sub = parser->getSubtitles();
-    cout << sub.size();
+    ofLog(OF_LOG_NOTICE) << "Loading subtitles file: " << srtPath << " "<< sub.size() <<std::endl;
     for (SubtitleItem *element : sub) {
         vector<std::string> words = element->getIndividualWords();
         if (words.empty()) continue;
@@ -208,6 +205,7 @@ void Chandelier::updateTimeStamp(int currentFrame) {
 
 // Trigger specified effect at timestamp
 void Chandelier::updateEffects(int currentFrame) {
+    cout << "updating effects for frame " << currentFrame << "\n";
     float currentMillis = currentFrame/ frameRate * 1000;
     for (auto effect = effects.begin(); effect != effects.end(); ++effect) {
         if (currentMillis < effect->startTime)
