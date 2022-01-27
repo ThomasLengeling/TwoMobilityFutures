@@ -4,6 +4,8 @@ static int64_t prev_frame = 0;
 static int64_t cur_frame = 0;
 static uint8_t offset = 1;
 
+using namespace std;
+
 //--------------------------------------------------------------
 void ofApp::setup(){
 
@@ -74,23 +76,28 @@ void ofApp::update() {
     //UPDATE MASTER
     if (mMasterUDP) {
 
+        // update serial everytime in order to use gui controls
         mChanderlier->updateSerial();
+        // TODO: maybe add a system to update only on specific videos
+        if (mCommon->mCurrentSeqName == "girl_test" || mCommon->mCurrentSeqName == "girl_vertical") {
+            //chandelier update based on the frame
+            mChanderlier->updateEffects(mCommon->commonFrame);
+        }
+
+   
         //update audio pos
         double audioPos = player.getPosition();
         mMasterAudio.set(audioPos);
-
         //lock the fps with app frame rate
         if (mLockFpsUpdate) {
             mCommon->commonFrame++;
-
+           
+ 
             //reset
             if (mCommon->commonFrame >= mCommon->maxFrames) {
                 mCommon->commonFrame = mCommon->maxFrames;
                 mLockFpsUpdate = false;
                 mWaitPeriod = true;
-
-                //chandelier update based on the frame
-                mChanderlier->updateEffects(mCommon->commonFrame);
 
                 ofLog(OF_LOG_NOTICE) << "Done Master Frame";
             }
@@ -144,6 +151,7 @@ void ofApp::update() {
     }
 
     //master reset videos
+    //--------------------------------
     if (mMasterUDP) {
 
         //if video has finished playing go to wait period
@@ -157,6 +165,7 @@ void ofApp::update() {
         //load period
         if (mLoadedVidoes) {
 
+            //init sequence on computer start, only once
             initCouter++;
             if (initCouter > 25 * 40) {
                 ofLog(OF_LOG_NOTICE) << "START MOVIE " << std::endl;
@@ -167,12 +176,14 @@ void ofApp::update() {
 
                 std::fill(mCommon->mLoadedVideos.begin(), mCommon->mLoadedVideos.end(), true);
                 cout.flush();
+
+                //
             }
         }
         //wait and reset
         if (mWaitPeriod && mAudioDone) {
             initCouter++;
-            if (initCouter > 25 * 5) {
+            if (initCouter > 25 * 10) {
                 ofLog(OF_LOG_NOTICE) << "Reset Play";
 
                 string message = "d " + to_string(mCurrSyncMode);
@@ -202,6 +213,9 @@ void ofApp::update() {
                 initCouter = 0;
                 mWaitPeriod = false;
                 mAudioDone = false;
+
+                //reset coomand chandelier
+
             }
         }
     }
@@ -510,10 +524,14 @@ void ofApp::setupGui(){
 }
 
 void ofApp::setupChanderlier() {
+
+    ofLog(OF_LOG_NOTICE) << "Loading Chandelier" << std::endl;
+
     mChanderlier = Chandelier::create();
     mChanderlier->initSerial(0, 9600);
     // mChanderlier->loadJson();
-    mChanderlier->loadSubtitles('C:/Users/Bizon/Desktop/App/data/subtitles/woman-lights-test.srt');
+    std::string dir = ofPath+"subtitles/woman-lights-test.srt";
+    mChanderlier->loadSubtitles(dir);
     mChanderlier->initGui();
 }
 

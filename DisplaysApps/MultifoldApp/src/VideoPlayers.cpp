@@ -82,6 +82,7 @@ void VideoPlayers::setPosition(double value) {
     }
     else if (mPlayerType == 1) {
         mHPVPlayer.seekToPos(value);
+        
     }
     else if (mPlayerType == 2) {
         mOFVideoPlayer.setPosition(value);

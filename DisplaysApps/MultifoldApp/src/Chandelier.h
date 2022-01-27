@@ -11,6 +11,7 @@
 
 #include "ofMain.h"
 #include "ofxGui.h"
+#include "srtparser.h"
 
 class Chandelier;
 
@@ -23,7 +24,6 @@ struct effect {
     int code;
     string type;
 };
-vector<effect> effects;
 
 class Chandelier {
 public:
@@ -56,7 +56,7 @@ public:
     int frameRate = 24;
 
 private:
-    vector<timestamp> timestamps;
+    vector<effect> effects;
 
     //gui
     ofxGuiGroup assetsGroup;
