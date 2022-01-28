@@ -156,46 +156,56 @@ void Chandelier::drawStats() {
 -- Data / Effects --
 */
 
-// Load JSON containing effects to trigger at given frames
-void Chandelier::loadJson(string jsonPath) {
-    string filepath = "test-video-timestamps.json";
-    ofFile file(filepath);
-    if (file.exists()){
-        ofLog(OF_LOG_NOTICE) << " Loading Chanderlier time step json: " << filepath;
-        ofJson json = ofLoadJson(filepath);
-        for (auto& entry : json["timestamps"]) {
-            if (!entry.empty()) {
-                effect e;
-                e.frame = entry["frame"];
-                e.startTime = entry["frame"];
-                e.type = entry["effect"].get<string>();
-                e.code = entry["code"];
-                effects.push_back(e);
-            }
+void ofApp::loadVideo(string videoName){
+    for (int i = 0; i < videos.size(); i++) {
+        video v = videos[i];
+        cout << v.name << " " << v.name << endl;
+        if (v.name == videoName){
+            currentVideo = v;
+            break;
         }
-    }
-    else {
-        ofLog(OF_LOG_NOTICE) << " Error loading File" << filepath;
     }
 }
 
-void Chandelier::loadSubtitles(string srtPath){
-    SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(srtPath);
+
+void ofApp::initVideoEffects(vector<string> videoNames) {
+    // TODO: prevent having to duplicate this from ofApp.cpp
+    ofPath = ofFilePath::getAbsolutePath(ofToDataPath("C:/Users/Bizon/Desktop/App/data/"));
+    string subtitlesDir = ofPath+"subtitles/";
+
+    for (int i = 0; i < videoNames.size(); i++) {
+        string videoName = videoNames[i];
+        string videoSubtitlesPath = subtitlesDir + videoName + ".srt";
+
+        video v;
+        v.name = videoName;
+        v.subtitlesPath = videoSubtitlesPath;
+        v.effects = parseVideoEffects(videoSubtitlesPath);
+        videos.push_back(v);
+    }
+}
+
+// Access data from individual subtitle caption (seperated because this could later get more complex/ nuanced)
+vector<effect> ofApp::parseVideoEffects(string subtitleFilesPath) {
+    SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(subtitleFilesPath);
     SubtitleParser *parser = subParserFactory->getParser();
-    vector<SubtitleItem *> sub = parser->getSubtitles();
-    ofLog(OF_LOG_NOTICE) << "Loading subtitles file: " << srtPath << " "<< sub.size() <<std::endl;
-    for (SubtitleItem *element : sub) {
+    vector<SubtitleItem *> subs = parser->getSubtitles();
+    
+    vector<effect> effects;
+    for (SubtitleItem *element : subs) {
         vector<std::string> words = element->getIndividualWords();
         if (words.empty()) continue;
 
         effect e;
         e.startTime = element->getStartTime();
-        e.type = words.front(); // name of effect
-        e.code = std::stoi(words.at(1)); // byte code TODO: create enum to perform string/ code lookup
+        e.type = words.front();           // name of effect
+        e.code = std::stoi(words.at(1));  // byte code TODO: create enum to perform string/ code lookup
         effects.push_back(e);
     }
     cout.flush();
+    return effects;
 }
+
 
 // Retrieve list of videos in project data directory (e.g. used to select videos
 // via GUI)
@@ -220,19 +230,20 @@ void Chandelier::updateTimeStamp(int currentFrame) {
 }
 
 // Trigger specified effect at timestamp
-void Chandelier::updateEffects(int currentFrame, float currentFPS) {
-    cout << "updating effects for frame " << currentFrame << "\n";
-    float currentMillis = currentFrame/ currentFPS * 1000;
-    cout << "frame: " << currentFrame << " millis: " << currentMillis << "\n";
-    for (auto effect = effects.begin(); effect != effects.end(); ++effect) {
-        if (currentMillis < effect->startTime)
-            continue;
+void ofApp::updateEffects() {
+    float currentFrame = player.getCurrentFrame();
+    float currentMillis = currentFrame / frameRate * 1000;
+    cout << "current frame " << currentFrame;
+    cout << "\ncurrent position " << currentMillis << "\n";
 
-        mSerial.writeByte((char)effect->code);
+    for (auto effect = currentVideo.effects.begin(); effect != currentVideo.effects.end(); ++effect) {
+        if (currentMillis < effect->startTime) continue;
+
+        mserial.writeByte((char)effect->code);
         printf("----------------------------------------");
         printf("%c", effect->type.c_str());
         printf("----------------------------------------");
-        effects.erase(effects.begin());
+        currentVideo.effects.erase(currentVideo.effects.begin());
         break;
     }
     cout.flush();

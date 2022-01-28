@@ -17,14 +17,18 @@ class Chandelier;
 
 typedef std::shared_ptr<Chandelier> ChandelierRef;
 
-    // Video choreography from .srt
+// Video effects
 struct effect {
     int frame;
     int startTime;
     int code;
     string type;
 };
-
+struct video {
+    string name;
+    string subtitlesPath;
+    vector<effect> effects;
+};
 class Chandelier {
 public:
     Chandelier();
@@ -36,8 +40,8 @@ public:
     void initSerial(int portid, int baud);
     void initGui();
     void getVideos();
-    void loadJson(string jsonPath);
-    void loadSubtitles(string srtPath);
+    void initVideoEffects(vector<string> videoNames);
+    void loadVideo(string videoName);
     void drawStats();
     void updateSerial();
     void updateControls();
@@ -56,7 +60,10 @@ public:
     int frameRate = 25;
 
 private:
-    vector<effect> effects;
+    vector<effect> parseVideoEffects(string subtitleFilesPath);
+    
+    vector<video> videos;
+    video currentVideo;
 
     //gui
     ofxGuiGroup assetsGroup;
