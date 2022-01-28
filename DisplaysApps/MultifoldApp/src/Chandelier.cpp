@@ -1,8 +1,8 @@
 #include "Chandelier.h"
 
-
 Chandelier::Chandelier() {
-    useSerial = false;;
+    useSerial = false;
+    ;
     completedHandshake = false;
     handshakeMessage = 's';
     mSerialId = 0;
@@ -15,20 +15,20 @@ void Chandelier::initSerial(int portid, int baud) {
     mSerialBaudRate = baud;
     mSerial.listDevices();
 
-    vector <ofSerialDeviceInfo> deviceList = mSerial.getDeviceList();
+    vector<ofSerialDeviceInfo> deviceList = mSerial.getDeviceList();
 
-    //default values:
+    // default values:
     mSerialId = portid;
     if (!deviceList.empty() && portid < deviceList.size()) {
         mSerialName = deviceList.at(portid).getDeviceName();
     }
 
-    //find the correponding serial port 
-    for (auto& devices : deviceList) {
+    // find the correponding serial port
+    for (auto &devices : deviceList) {
         ofLog(OF_LOG_NOTICE) << devices.getDeviceName() << " " << devices.getDeviceID();
         if (mSerialName == devices.getDeviceName()) {
             mSerialName = devices.getDeviceName();
-            mSerialId   = devices.getDeviceID();
+            mSerialId = devices.getDeviceID();
             break;
         }
     }
@@ -37,7 +37,6 @@ void Chandelier::initSerial(int portid, int baud) {
     if (useSerial) {
         ofLog(OF_LOG_NOTICE) << "load device " << mSerialName << " " << mSerialId << " " << mSerialBaudRate;
     }
-
 }
 
 // Read/ write serial
@@ -51,7 +50,7 @@ void Chandelier::updateSerial() {
         }
         mSerial.readBytes(receivedData, 1);
 
-        if (receivedData == (char*)handshakeMessage) {
+        if (receivedData == (char *)handshakeMessage) {
             cout << "handshake completed\n";
             completedHandshake = true;
         }
@@ -96,7 +95,7 @@ void Chandelier::updateSerial() {
 
 //--------------------------------------------------------
 void Chandelier::requestHandshake() {
-    //cout << "requesting handshake\n";
+    // cout << "requesting handshake\n";
     mSerial.writeByte(handshakeMessage);
 }
 
@@ -105,10 +104,10 @@ void Chandelier::requestHandshake() {
 */
 //--------------------------------------------------------
 void Chandelier::initGui() {
-   // gui.setup();
+    // gui.setup();
     videoGroup.setup("Video Controls");
-    //videoGroup.add(videoStartButton.setup("Start"));
-    //videoGroup.add(videoStopButton.setup("Stop"));
+    // videoGroup.add(videoStartButton.setup("Start"));
+    // videoGroup.add(videoStopButton.setup("Stop"));
 
     ledGroup.setup("LED Controls");
     ledGroup.add(ledButtonOn.setup("LED On"));
@@ -117,61 +116,60 @@ void Chandelier::initGui() {
     ledGroup.add(ledButtonCandle.setup("LED Candle"));
     ledGroup.add(ledButtonStrobe.setup("LED Strobe"));
     ledGroup.add(ledButtonRandomStrobe.setup("LED Random Strobe"));
-    //gui.add(&videoGroup);
-    //gui.add(&ledGroup);
+    // gui.add(&videoGroup);
+    // gui.add(&ledGroup);
 
-    //scrub.setup();
-   // scrub.add(scrubber.set("Scrub", 0, 0, this->getTotalNumFrames()));
-    //scrub.setPosition(0, ofGetHeight() - 50);
-    //scrub.setSize(ofGetWidth(), 50);
-    //scrubber.addListener(this, &Chandelier::updateScrubber);
+    // scrub.setup();
+    // scrub.add(scrubber.set("Scrub", 0, 0, this->getTotalNumFrames()));
+    // scrub.setPosition(0, ofGetHeight() - 50);
+    // scrub.setSize(ofGetWidth(), 50);
+    // scrubber.addListener(this, &Chandelier::updateScrubber);
 }
 //--------------------------------------------------------
-    
+
 void Chandelier::updateControls() {
-    if (videoStartButton ) { //&& !player.isPlaying()
+    if (videoStartButton) {  //&& !player.isPlaying()
         printf("start\n");
         cout.flush();
-        //player.play();
+        // player.play();
     }
     if (!videoStopButton) {
         printf("stop\n");
         cout.flush();
-        //player.stop();
+        // player.stop();
     }
 }
 
-void Chandelier::updateScrubber(int& value) {
+void Chandelier::updateScrubber(int &value) {
     printf("set frame: %i\n", value);
     cout.flush();
-    //player.setFrame(scrubber);
+    // player.setFrame(scrubber);
 }
 
 void Chandelier::drawStats() {
-    //ofDrawBitmapString("Video Speed: " + std::to_string(player.getSpeed()), 20, videoHeight + 20);
-    //ofDrawBitmapString("Video Frame: " + std::to_string(player.getCurrentFrame()), 20, videoHeight + 35);
+    // ofDrawBitmapString("Video Speed: " + std::to_string(player.getSpeed()), 20, videoHeight + 20);
+    // ofDrawBitmapString("Video Frame: " + std::to_string(player.getCurrentFrame()), 20, videoHeight + 35);
 }
 
 /*
 -- Data / Effects --
 */
 
-void ofApp::loadVideo(string videoName){
+void Chandelier::loadVideo(string videoName) {
     for (int i = 0; i < videos.size(); i++) {
         video v = videos[i];
         cout << v.name << " " << v.name << endl;
-        if (v.name == videoName){
+        if (v.name == videoName) {
             currentVideo = v;
             break;
         }
     }
 }
 
-
-void ofApp::initVideoEffects(vector<string> videoNames) {
+void Chandelier::initVideoEffects(vector<string> videoNames) {
     // TODO: prevent having to duplicate this from ofApp.cpp
     ofPath = ofFilePath::getAbsolutePath(ofToDataPath("C:/Users/Bizon/Desktop/App/data/"));
-    string subtitlesDir = ofPath+"subtitles/";
+    string subtitlesDir = ofPath + "subtitles/";
 
     for (int i = 0; i < videoNames.size(); i++) {
         string videoName = videoNames[i];
@@ -186,11 +184,11 @@ void ofApp::initVideoEffects(vector<string> videoNames) {
 }
 
 // Access data from individual subtitle caption (seperated because this could later get more complex/ nuanced)
-vector<effect> ofApp::parseVideoEffects(string subtitleFilesPath) {
+vector<effect> Chandelier::parseVideoEffects(string subtitleFilesPath) {
     SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(subtitleFilesPath);
     SubtitleParser *parser = subParserFactory->getParser();
     vector<SubtitleItem *> subs = parser->getSubtitles();
-    
+
     vector<effect> effects;
     for (SubtitleItem *element : subs) {
         vector<std::string> words = element->getIndividualWords();
@@ -205,7 +203,6 @@ vector<effect> ofApp::parseVideoEffects(string subtitleFilesPath) {
     cout.flush();
     return effects;
 }
-
 
 // Retrieve list of videos in project data directory (e.g. used to select videos
 // via GUI)
@@ -230,7 +227,7 @@ void Chandelier::updateTimeStamp(int currentFrame) {
 }
 
 // Trigger specified effect at timestamp
-void ofApp::updateEffects() {
+void Chandelier::updateEffects() {
     float currentFrame = player.getCurrentFrame();
     float currentMillis = currentFrame / frameRate * 1000;
     cout << "current frame " << currentFrame;
