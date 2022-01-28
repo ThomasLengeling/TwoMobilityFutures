@@ -45,7 +45,6 @@ public:
     void drawStats();
     void updateSerial();
     void updateControls();
-    void updateTimeStamp(int currentFrame);
     void updateEffects(int currentFrame, float currentFPS);
     void updateScrubber(int& value);
     void requestHandshake();
@@ -61,7 +60,7 @@ public:
 
 private:
     vector<effect> parseVideoEffects(string subtitleFilesPath);
-    
+
     vector<video> videos;
     video currentVideo;
 

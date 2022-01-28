@@ -215,19 +215,7 @@ void Chandelier::getVideos() {
 }
 
 // Trigger specified effect at timestamp
-void Chandelier::updateTimeStamp(int currentFrame) {
-    for (auto effect = effects.begin(); effect != effects.end(); ++effect) {
-        if (currentFrame == effect->frame) {
-            mSerial.writeByte((char)effect->code);
-            printf("%c", effect->type.c_str());
-            cout.flush();
-        }
-    }
-}
-
-// Trigger specified effect at timestamp
-void Chandelier::updateEffects() {
-    float currentFrame = player.getCurrentFrame();
+void Chandelier::updateEffects(int currentFrame, float currentFPS) {
     float currentMillis = currentFrame / frameRate * 1000;
     cout << "current frame " << currentFrame;
     cout << "\ncurrent position " << currentMillis << "\n";
