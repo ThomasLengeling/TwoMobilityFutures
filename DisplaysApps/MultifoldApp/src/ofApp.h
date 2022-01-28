@@ -177,6 +177,8 @@ public:
     int mCurrSyncMode;
 
     int mDeltaFrame;
+    bool mDeltaInc;
+    bool mDeltaDec;
     float mDeltaSoundTime;
 
     //Chandelier
@@ -225,8 +227,6 @@ public:
     int mId;
 
     std::string mVideoType;
-
-
 
     int mSequenceId; //current sequence id
     std::string mCurrentSeqName; //sequence name
