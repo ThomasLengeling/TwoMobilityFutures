@@ -168,8 +168,7 @@ void Chandelier::loadVideo(string videoName) {
 
 void Chandelier::initVideoEffects(vector<string> videoNames) {
     // TODO: prevent having to duplicate this from ofApp.cpp
-    ofPath = ofFilePath::getAbsolutePath(ofToDataPath("C:/Users/Bizon/Desktop/App/data/"));
-    string subtitlesDir = ofPath + "subtitles/";
+    string subtitlesDir = ofFilePath::getAbsolutePath(ofToDataPath("C:/Users/Bizon/Desktop/App/data/")) + "subtitles/";
 
     for (int i = 0; i < videoNames.size(); i++) {
         string videoName = videoNames[i];

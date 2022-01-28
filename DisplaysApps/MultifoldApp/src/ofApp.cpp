@@ -243,7 +243,7 @@ void ofApp::update() {
                 mAudioDone = false;
 
                 // load new chandelier effects
-                mChandelier->loadVideo(mCurrentSeqName);
+                mChandelier->loadVideo(mCommon->mCurrentSeqName);
 
             }
         }
