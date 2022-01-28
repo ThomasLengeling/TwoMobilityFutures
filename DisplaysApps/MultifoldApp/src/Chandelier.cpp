@@ -164,12 +164,16 @@ void Chandelier::loadVideo(string videoName) {
             break;
         }
     }
+    // Turn off chandelier on each load TODO:
+    unsigned char myByte = 2;
+    mSerial.writeByte(myByte);
+    printf("off\n");
+    cout << "current video " << currentVideo.name;
 }
 
 void Chandelier::initVideoEffects(vector<string> videoNames) {
     // TODO: prevent having to duplicate this from ofApp.cpp
     string subtitlesDir = ofFilePath::getAbsolutePath(ofToDataPath("C:/Users/Bizon/Desktop/App/data/")) + "subtitles/";
-
     for (int i = 0; i < videoNames.size(); i++) {
         string videoName = videoNames[i];
         string videoSubtitlesPath = subtitlesDir + videoName + ".srt";
@@ -178,6 +182,7 @@ void Chandelier::initVideoEffects(vector<string> videoNames) {
         v.name = videoName;
         v.subtitlesPath = videoSubtitlesPath;
         v.effects = parseVideoEffects(videoSubtitlesPath);
+        cout << videoSubtitlesPath << endl;
         videos.push_back(v);
     }
 }
@@ -195,6 +200,7 @@ vector<effect> Chandelier::parseVideoEffects(string subtitleFilesPath) {
 
         effect e;
         e.startTime = element->getStartTime();
+        cout << e.startTime << " " << words.front() << endl;
         e.type = words.front();           // name of effect
         e.code = std::stoi(words.at(1));  // byte code TODO: create enum to perform string/ code lookup
         effects.push_back(e);
@@ -216,7 +222,7 @@ void Chandelier::getVideos() {
 
 // Trigger specified effect at timestamp
 void Chandelier::updateEffects(int currentFrame, float currentFPS) {
-    float currentMillis = currentFrame / frameRate * 1000;
+    float currentMillis = currentFrame / currentFPS * 1000;
     cout << "current frame " << currentFrame;
     cout << "\ncurrent position " << currentMillis << "\n";
 

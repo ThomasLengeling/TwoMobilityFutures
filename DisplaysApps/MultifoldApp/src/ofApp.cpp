@@ -747,6 +747,9 @@ void ofApp::loadSequence(int id) {
             udpSendLeft.Send(message.c_str(), message.length());
             udpSendCenter.Send(message.c_str(), message.length());
         }
+
+        // load new chandelier effects
+        mChanderlier->loadVideo(mCommon->mCurrentSeqName);
     }
 }
 //
