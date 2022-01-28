@@ -223,7 +223,7 @@ void Chandelier::updateEffects(int currentFrame, float currentFPS) {
     for (auto effect = currentVideo.effects.begin(); effect != currentVideo.effects.end(); ++effect) {
         if (currentMillis < effect->startTime) continue;
 
-        mserial.writeByte((char)effect->code);
+        mSerial.writeByte((char)effect->code);
         printf("----------------------------------------");
         printf("%c", effect->type.c_str());
         printf("----------------------------------------");
