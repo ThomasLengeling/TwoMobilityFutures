@@ -2,7 +2,20 @@
 
 #include "ofMain.h"
 #include "ofxGui.h"
+#include "srtparser.h"
 
+// Video effects
+struct effect {
+    int frame;
+    int startTime;
+    int code;
+    string type;
+};
+struct video {
+    string name;
+    string subtitlesPath;
+    vector<effect> effects;
+};
 class ofApp : public ofBaseApp {
    public:
     void setup();
@@ -11,8 +24,10 @@ class ofApp : public ofBaseApp {
     void initSerial();
     void initGui();
     void getVideos();
-    void loadJSON(string jsonPath);
-    void loadSubtitles(string srtPath);
+    // void loadJSON(string jsonPath);
+    void initVideoEffects(vector<string> videoNames);
+    vector<effect> parseVideoEffects(string subtitleFilesPath);
+    void loadVideo(string videoName);
     void drawStats();
     void updateSerial();
     void updateControls();
@@ -20,20 +35,14 @@ class ofApp : public ofBaseApp {
     void updateScrubber(int &value);
     void requestHandshake();
 
-    // Video choreography from .srt
-    struct effect {
-        int frame;
-        int startTime;
-        int code;
-        string type;
-    };
-    vector<effect> effects;
+    vector<video> videos;
+    video currentVideo;
 
     // Video
     ofVideoPlayer player;
     const int videoWidth = 2880 / 3;   // 1024;
     const int videoHeight = 1620 / 3;  // 435;
-    int frameRate = 24; // temp rate to calculate duration in millis, matches rate of test video
+    int frameRate = 24;                // temp rate to calculate duration in millis, matches rate of test video
 
     // Gui
     ofxPanel gui;

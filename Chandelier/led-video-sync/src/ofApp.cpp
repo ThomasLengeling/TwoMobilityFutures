@@ -1,18 +1,23 @@
 #include "ofApp.h"
-#include "srtparser.h"
 
 void ofApp::setup() {
     string videoPath = "videos/A001C000574.mov";
-    string jsonPath = "test-video-timestamps.json";
-    string srtPath = "/Users/justinblinder/dev/medialab/TwoMobilityFutures/Chandelier/led-video-sync/bin/data/aom-test_SRT_English.srt";
+    // string jsonPath = "test-video-timestamps.json";
+    // string srtPath =
+    //     "/Users/justinblinder/dev/medialab/TwoMobilityFutures/Chandelier/led-video-sync/bin/data/"
+    //     "aom-test_SRT_English.srt";
 
     player.load(videoPath);
     initGui();
     initSerial();
-    // loadJSON(jsonPath);
-    loadSubtitles(srtPath);
+    // used for test app
+    /*
+    loadJSON(jsonPath);
+    vector<string> videos = { "woman-test" };
+    initVideoEffects(videos);
+    loadVideo("woman-test");
+    */
     getVideos();
-
     ofSetFrameRate(frameRate);
 }
 
@@ -162,6 +167,7 @@ void ofApp::drawStats() {
 */
 
 // Load JSON containing effects to trigger at given frames
+/*
 void ofApp::loadJSON(string jsonPath) {
     ofFile file(jsonPath);
     if (!file.exists()) return;
@@ -177,24 +183,56 @@ void ofApp::loadJSON(string jsonPath) {
         }
     }
 }
+*/
 
-// Load SubRip .srt file containing effects to trigger at given frames
-void ofApp::loadSubtitles(string srtPath) {
-    SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(srtPath);
+void ofApp::loadVideo(string videoName){
+    for (int i = 0; i < videos.size(); i++) {
+        video v = videos[i];
+        cout << v.name << " " << v.name << endl;
+        if (v.name == videoName){
+            currentVideo = v;
+            break;
+        }
+    }
+}
+
+void ofApp::initVideoEffects(vector<string> videoNames) { //loadSubtitles(string subtitleFilesPath) {
+    // ofPath = ofFilePath::getAbsolutePath(ofToDataPath("C:/Users/Bizon/Desktop/App/data/"));
+    // string subtitlesDir = ofPath+"subtitles/";
+    string subtitlesDir = "/Users/justinblinder/dev/medialab/TwoMobilityFutures/Chandelier/led-video-sync/bin/data/";
+
+    for (int i = 0; i < videoNames.size(); i++) {
+        string videoName = videoNames[i];
+        string videoSubtitlesPath = subtitlesDir + videoName + ".srt";
+        cout << videoName << " " << videoSubtitlesPath << endl;
+        video v;
+        v.name = videoName;
+        v.subtitlesPath = videoSubtitlesPath;
+        v.effects = parseVideoEffects(videoSubtitlesPath);
+        videos.push_back(v);
+    }
+}
+
+// Access data from individual subtitle caption (seperated because this could later get more complex/ nuanced)
+vector<effect> ofApp::parseVideoEffects(string subtitleFilesPath) {
+    SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(subtitleFilesPath);
     SubtitleParser *parser = subParserFactory->getParser();
-    vector<SubtitleItem *> sub = parser->getSubtitles();
-    cout << sub.size();
-    for (SubtitleItem *element : sub) {
+    vector<SubtitleItem *> subs = parser->getSubtitles();
+    
+    vector<effect> effects;
+    for (SubtitleItem *element : subs) {
         vector<std::string> words = element->getIndividualWords();
         if (words.empty()) continue;
 
         effect e;
         e.startTime = element->getStartTime();
-        e.type = words.front(); // name of effect
-        e.code = std::stoi(words.at(1)); // byte code TODO: create enum to perform string/ code lookup
+        cout << words.front() << " " << e.startTime << endl;
+        e.type = words.front();           // name of effect
+        e.code = std::stoi(words.at(1));  // byte code TODO: create enum to perform string/ code lookup
         effects.push_back(e);
     }
     cout.flush();
+    return effects;
 }
 
 // Retrieve list of videos in project data directory (e.g. used to select videos
@@ -211,19 +249,18 @@ void ofApp::getVideos() {
 // Trigger specified effect at timestamp
 void ofApp::updateEffects() {
     float currentFrame = player.getCurrentFrame();
-    float currentMillis = currentFrame/ frameRate * 1000;
+    float currentMillis = currentFrame / frameRate * 1000;
     cout << "current frame " << currentFrame;
     cout << "\ncurrent position " << currentMillis << "\n";
-    
-    for (auto effect = effects.begin(); effect != effects.end(); ++effect) {
-        if (currentMillis < effect->startTime)
-            continue;
+
+    for (auto effect = currentVideo.effects.begin(); effect != currentVideo.effects.end(); ++effect) {
+        if (currentMillis < effect->startTime) continue;
 
         mserial.writeByte((char)effect->code);
         printf("----------------------------------------");
         printf("%c", effect->type.c_str());
         printf("----------------------------------------");
-        effects.erase(effects.begin());
+        currentVideo.effects.erase(currentVideo.effects.begin());
         break;
     }
     cout.flush();
