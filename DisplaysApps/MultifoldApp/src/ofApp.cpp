@@ -589,9 +589,7 @@ void ofApp::setupChanderlier() {
 
     mChanderlier = Chandelier::create();
     mChanderlier->initSerial(0, 9600);
-    // mChanderlier->loadJson();
-    std::string dir = ofPath+"subtitles/woman-lights-test.srt";
-    mChanderlier->loadSubtitles(dir);
+    mChanderlier->initVideoEffects(mCommon->mSeqNames);
     mChanderlier->initGui();
 }
 
