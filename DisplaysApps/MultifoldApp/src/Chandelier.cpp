@@ -52,6 +52,7 @@ void Chandelier::updateSerial() {
         mSerial.readBytes(receivedData, 1);
 
         if (receivedData == (char*)handshakeMessage) {
+            cout << "handshake completed\n";
             completedHandshake = true;
         }
 
@@ -73,17 +74,17 @@ void Chandelier::updateSerial() {
         }
         if (ledButtonCandle) {
             unsigned char myByte = 4;
-            mserial.writeByte(myByte);
+            mSerial.writeByte(myByte);
             printf("candle\n");
         }
         if (ledButtonStrobe) {
             unsigned char myByte = 5;
-            mserial.writeByte(myByte);
+            mSerial.writeByte(myByte);
             printf("strobe\n");
         }
         if (ledButtonRandomStrobe) {
             unsigned char myByte = 6;
-            mserial.writeByte(myByte);
+            mSerial.writeByte(myByte);
             printf("random strobe\n");
         }
         cout.flush();
@@ -95,7 +96,7 @@ void Chandelier::updateSerial() {
 
 //--------------------------------------------------------
 void Chandelier::requestHandshake() {
-    cout << "requesting handshake\n";
+    //cout << "requesting handshake\n";
     mSerial.writeByte(handshakeMessage);
 }
 
@@ -219,9 +220,10 @@ void Chandelier::updateTimeStamp(int currentFrame) {
 }
 
 // Trigger specified effect at timestamp
-void Chandelier::updateEffects(int currentFrame) {
+void Chandelier::updateEffects(int currentFrame, float currentFPS) {
     cout << "updating effects for frame " << currentFrame << "\n";
-    float currentMillis = currentFrame/ frameRate * 1000;
+    float currentMillis = currentFrame/ currentFPS * 1000;
+    cout << "frame: " << currentFrame << " millis: " << currentMillis << "\n";
     for (auto effect = effects.begin(); effect != effects.end(); ++effect) {
         if (currentMillis < effect->startTime)
             continue;

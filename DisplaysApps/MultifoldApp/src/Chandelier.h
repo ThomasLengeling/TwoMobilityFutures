@@ -42,7 +42,7 @@ public:
     void updateSerial();
     void updateControls();
     void updateTimeStamp(int currentFrame);
-    void updateEffects(int currentFrame);
+    void updateEffects(int currentFrame, float currentFPS);
     void updateScrubber(int& value);
     void requestHandshake();
 
@@ -53,7 +53,7 @@ public:
 
     ofxGuiGroup ledGroup;
     // TODO: temp fix, figure out how to determine millis in video
-    int frameRate = 24;
+    int frameRate = 25;
 
 private:
     vector<effect> effects;
