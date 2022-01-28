@@ -79,9 +79,9 @@ void ofApp::update() {
         // update serial everytime in order to use gui controls
         mChanderlier->updateSerial();
         // TODO: maybe add a system to update only on specific videos
-        if (mCommon->mCurrentSeqName == "girl_test" || mCommon->mCurrentSeqName == "girl_vertical") {
+        if (mCommon->mCurrentSeqName == "girl_test" || mCommon->mCurrentSeqName == "girl_test_vertical") {
             //chandelier update based on the frame
-            mChanderlier->updateEffects(mCommon->commonFrame);
+            mChanderlier->updateEffects(mCommon->commonFrame, ofGetFrameRate());
         }
 
    
