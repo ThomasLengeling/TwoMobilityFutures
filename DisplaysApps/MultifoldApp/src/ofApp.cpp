@@ -79,15 +79,6 @@ void ofApp::update() {
     //UPDATE MASTER
     if (mMasterUDP) {
 
-        // update serial everytime in order to use gui controls
-     //   mChanderlier->updateSerial();
-        // TODO: maybe add a system to update only on specific videos
-        if (mCommon->mCurrentSeqName == "girl_test" || mCommon->mCurrentSeqName == "girl_test_vertical") {
-            //chandelier update based on the frame
-       //     mChanderlier->updateEffects(mCommon->commonFrame, ofGetFrameRate());
-        }
-
-   
         //update audio pos
         double audioPos = player.getPosition();
         mMasterAudio.set(audioPos);
@@ -97,12 +88,9 @@ void ofApp::update() {
             mCommon->commonFrame++;
            
             //chandelier update 
-           mChanderlier->updateSerial();
-            // TODO: maybe add a system to update only on specific videos
-           if (mCommon->mCurrentSeqName == "girl_test" || mCommon->mCurrentSeqName == "girl_test_vertical") {
-               //chandelier update based on the frame
-               mChanderlier->updateEffects(mCommon->commonFrame, ofGetFrameRate());
-           }
+            mChanderlier->updateSerial();
+            mChanderlier->updateEffects(mCommon->commonFrame, ofGetFrameRate());
+
             //frame reset
             if (mCommon->commonFrame >= mCommon->maxFrames) {
                 mCommon->commonFrame = mCommon->maxFrames;
@@ -254,8 +242,8 @@ void ofApp::update() {
                 mWaitPeriod = false;
                 mAudioDone = false;
 
-                //reset coomand chandelier, when starting video
-                
+                // load new chandelier effects
+                mChandelier->loadVideo(mCurrentSeqName);
 
             }
         }
