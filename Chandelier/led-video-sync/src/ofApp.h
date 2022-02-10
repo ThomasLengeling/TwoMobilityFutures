@@ -60,13 +60,18 @@ class ofApp : public ofBaseApp {
     ofxButton ledButtonCandle;
     ofxButton ledButtonStrobe;
     ofxButton ledButtonRandomStrobe;
-
+    ofxButton ledButtonFadeOn;
+    ofxButton ledButtonFadeOff;
+    ofxButton ledButtonFadeOnSequential;
+    ofxButton ledButtonFadeOffSequential;
+    // ofxIntSlider ledSelector;
+    
     ofxPanel scrub;
     ofParameter<int> scrubber;
 
     // Serial
     ofSerial mserial;
-    char receivedData[10];
+    char receivedData[1];
     bool useSerial = true;
     bool completedHandshake = false;
     char handshakeMessage = 0;

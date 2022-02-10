@@ -48,7 +48,7 @@ void ofApp::draw() {
 void ofApp::initSerial() {
     if (useSerial) {
         int baud = 9600;
-        mserial.setup(0, baud);
+        mserial.setup(1, baud);
     }
 }
 
@@ -56,49 +56,72 @@ void ofApp::initSerial() {
 void ofApp::updateSerial() {
     if (mserial.available()) {
         // TODO: not fully implemented on arduino end
+        mserial.readBytes(receivedData, 1);
+        
         if (!completedHandshake) {
             requestHandshake();
+            cout << "recieved data: " << (char*)receivedData << endl;
         }
-        mserial.readBytes(receivedData, 10);
-        cout << receivedData;
-        cout << "\n";
-        cout.flush();
 
-        if (receivedData == (char *)handshakeMessage) {
-            completedHandshake = true;
+        if (receivedData != NULL) {
+            cout.flush();
+            if (receivedData[0] == 's') {
+                cout << "handshake success" << endl;
+                completedHandshake = true;
+            }
         }
 
         // NOTE: only triggered by GUI
         if (ledButtonOn) {
-            unsigned char myByte = 1;
-            mserial.writeByte(myByte);
-            printf("on\n");
+            unsigned char buf[1] = {1};
+            mserial.writeBytes(&buf[0], 1);
+            printf("pressed on\n");
         }
         if (ledButtonOff) {
-            unsigned char myByte = 2;
-            mserial.writeByte(myByte);
-            printf("off\n");
+            unsigned char buf[1] = {2};
+            mserial.writeBytes(&buf[0], 1);
+            printf("pressed off\n");
         }
         if (ledButtonBreathe) {
-            unsigned char myByte = 3;
-            mserial.writeByte(myByte);
-            printf("breath\n");
+            unsigned char buf[1] = {3};
+            mserial.writeBytes(&buf[0], 1);
+            printf("pressed breath\n");
         }
         if (ledButtonCandle) {
-            unsigned char myByte = 4;
-            mserial.writeByte(myByte);
-            printf("candle\n");
+            unsigned char buf[1] = {4};
+            mserial.writeBytes(&buf[0], 1);
+            printf("pressed candle\n");
         }
         if (ledButtonStrobe) {
-            unsigned char myByte = 5;
-            mserial.writeByte(myByte);
-            printf("strobe\n");
+            unsigned char buf[1] = {5};
+            mserial.writeBytes(&buf[0], 1);
+            printf("pressed strobe\n");
         }
         if (ledButtonRandomStrobe) {
-            unsigned char myByte = 6;
-            mserial.writeByte(myByte);
-            printf("random strobe\n");
+            unsigned char buf[1] = {6};
+            mserial.writeBytes(&buf[0], 1);
+            printf("pressed random strobe\n");
         }
+        if (ledButtonFadeOn) {
+            unsigned char buf[1] = {7};
+            mserial.writeBytes(&buf[0], 1);
+            printf("pressed fade on\n");
+        }
+        if (ledButtonFadeOff) {
+            unsigned char buf[1] = {8};
+            mserial.writeBytes(&buf[0], 1);
+            printf("pressed fade off\n");
+        }
+        if (ledButtonFadeOnSequential) {
+            unsigned char buf[1] = {9};
+            mserial.writeBytes(&buf[0], 1);
+            printf("pressed fade on sequential\n");
+        }
+        // if (ledButtonFadeOffSequential) {
+        //     unsigned char buf[1] = {'10'};
+        //     mserial.writeBytes(&buf[0], 1);
+        //     printf("fade on sequential\n");
+        // }
         cout.flush();
     }
 }
@@ -106,8 +129,9 @@ void ofApp::updateSerial() {
 // Initilize handshake with Teensy
 // TODO: not fully implemented on Teensy side
 void ofApp::requestHandshake() {
-    cout << "requesting handshake\n";
-    mserial.writeByte(handshakeMessage);
+    // cout << "requesting handshake\n";
+    unsigned char buf[1] = {'s'};
+    mserial.writeBytes(&buf[0], 1);
 }
 
 /*
@@ -121,12 +145,16 @@ void ofApp::initGui() {
     videoGroup.add(videoStopButton.setup("Stop"));
 
     ledGroup.setup("LED Controls");
-    ledGroup.add(ledButtonOn.setup("LED On"));
-    ledGroup.add(ledButtonOff.setup("LED Off"));
-    ledGroup.add(ledButtonBreathe.setup("LED Breathe"));
-    ledGroup.add(ledButtonCandle.setup("LED Candle"));
-    ledGroup.add(ledButtonStrobe.setup("LED Strobe"));
-    ledGroup.add(ledButtonRandomStrobe.setup("LED Random Strobe"));
+    ledGroup.add(ledButtonOn.setup("On"));
+    ledGroup.add(ledButtonOff.setup("Off"));
+    ledGroup.add(ledButtonBreathe.setup("Breathe"));
+    ledGroup.add(ledButtonCandle.setup("Candle"));
+    ledGroup.add(ledButtonStrobe.setup("Strobe"));
+    ledGroup.add(ledButtonRandomStrobe.setup("Random Strobe"));
+    ledGroup.add(ledButtonFadeOn.setup("Fade In"));
+    ledGroup.add(ledButtonFadeOff.setup("Fade Off"));
+    ledGroup.add(ledButtonFadeOnSequential.setup("Fade In Seq"));
+    ledGroup.add(ledButtonFadeOffSequential.setup("Fade Off Seq"));
 
     gui.add(&videoGroup);
     gui.add(&ledGroup);
@@ -185,18 +213,18 @@ void ofApp::loadJSON(string jsonPath) {
 }
 */
 
-void ofApp::loadVideo(string videoName){
+void ofApp::loadVideo(string videoName) {
     for (int i = 0; i < videos.size(); i++) {
         video v = videos[i];
         cout << v.name << " " << v.name << endl;
-        if (v.name == videoName){
+        if (v.name == videoName) {
             currentVideo = v;
             break;
         }
     }
 }
 
-void ofApp::initVideoEffects(vector<string> videoNames) { //loadSubtitles(string subtitleFilesPath) {
+void ofApp::initVideoEffects(vector<string> videoNames) {  // loadSubtitles(string subtitleFilesPath) {
     // ofPath = ofFilePath::getAbsolutePath(ofToDataPath("C:/Users/Bizon/Desktop/App/data/"));
     // string subtitlesDir = ofPath+"subtitles/";
     string subtitlesDir = "/Users/justinblinder/dev/medialab/TwoMobilityFutures/Chandelier/led-video-sync/bin/data/";
@@ -218,7 +246,7 @@ vector<effect> ofApp::parseVideoEffects(string subtitleFilesPath) {
     SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(subtitleFilesPath);
     SubtitleParser *parser = subParserFactory->getParser();
     vector<SubtitleItem *> subs = parser->getSubtitles();
-    
+
     vector<effect> effects;
     for (SubtitleItem *element : subs) {
         vector<std::string> words = element->getIndividualWords();
@@ -250,8 +278,8 @@ void ofApp::getVideos() {
 void ofApp::updateEffects() {
     float currentFrame = player.getCurrentFrame();
     float currentMillis = currentFrame / frameRate * 1000;
-    cout << "current frame " << currentFrame;
-    cout << "\ncurrent position " << currentMillis << "\n";
+    // cout << "current frame " << currentFrame;
+    // cout << "\ncurrent position " << currentMillis << "\n";
 
     for (auto effect = currentVideo.effects.begin(); effect != currentVideo.effects.end(); ++effect) {
         if (currentMillis < effect->startTime) continue;
