@@ -25,8 +25,6 @@ void ofApp::setup(){
     //Video
     HPV::InitHPVEngine();
 
- 
-    
     setupChanderlier();
 
     //load UDP information
@@ -43,8 +41,6 @@ void ofApp::setup(){
     
     //commom state
     setupCommonState();
-
-
 
     ofResetElapsedTimeCounter();
     mInitTimer = 14000;//seconds
@@ -88,9 +84,9 @@ void ofApp::update() {
         double audioPos = player.getPosition();
         mMasterAudio.set(audioPos);
 
-
         //lock the fps with app frame rate
         if (mLockFpsUpdate) {
+
             //frame update 
             mCommon->commonFrame++;
 
@@ -143,6 +139,7 @@ void ofApp::update() {
                 mLoadedVidoes = false;
                 initCouter = 0;
 
+                //load videos
                 std::fill(mCommon->mLoadedVideos.begin(), mCommon->mLoadedVideos.end(), true);
                 cout.flush();
 
@@ -228,6 +225,7 @@ void ofApp::update() {
     ///-----------------------------
     //if receiving udp then is a salve
     if (mSlaveUDP) {
+        //update audio position
         double audioPos = player.getPosition();
         mMasterAudio.set(audioPos);
         mCommon->audioPos = audioPos;
@@ -235,6 +233,7 @@ void ofApp::update() {
         //send UDP
         updateUDP();
 
+        //frame update main
         if (mLockFpsUpdate) {
             mCommon->commonFrame++;
 
@@ -248,7 +247,6 @@ void ofApp::update() {
                     mDeltaInc = false;
                 }
             }
-
             if (mDeltaFrame < -2) {
                 if (ofGetFrameNum() % 10 == 0) {
                     mCommon->commonFrame--;
@@ -277,11 +275,8 @@ void ofApp::update() {
 
         }
     }
-
-
     //update osc
    // updateOSC();
-
 }
 
 //--------------------------------------------------------------
@@ -341,7 +336,7 @@ void ofApp::updateUDP() {
             }
         }
 
-
+        //d
         if (message[0] == 'd') {
 
             auto smsg = string_split(message);
@@ -389,6 +384,7 @@ void ofApp::updateUDP() {
            // player.setPosition(0.0);
            // player.setPaused(true);
         }
+
         // send time
         if (message[0] == 't') {
             auto smsg = string_split(message);
@@ -397,6 +393,7 @@ void ofApp::updateUDP() {
                 mMasterAudio.set(mCommon->audioPos);
             }
         }
+
         //load new video
         if (message[0] == 'n') {
             ofLog(OF_LOG_NOTICE) << "Slave new video sequence ";
@@ -406,6 +403,7 @@ void ofApp::updateUDP() {
                 loadSequence(mCommon->mSequenceId);
             }
         }
+        //jump to e
         if(message[0] == 'e') {
             auto smsg = string_split(message);
             if (smsg.size() >= 2) {
@@ -532,6 +530,7 @@ void ofApp::setupAudioSystem() {
     soundSettings.numBuffers = 2; //2
     soundSettings.sampleRate = player.getSoundFile().getSampleRate();
     
+    //master then  channel audio
     if (mMasterUDP) {
         for (int i = 0; i < outDevices.size(); i++) {
             if (outDevices[i].name == "Focusrite USB ASIO") {
@@ -555,6 +554,7 @@ void ofApp::setupAudioSystem() {
         }
     }
     
+    //
     ofLog(OF_LOG_NOTICE) << "Sound Device Read: " << outDeviceIndex;
     ofLog(OF_LOG_NOTICE) << outDevices[outDeviceIndex].name << std::endl;
 
@@ -587,7 +587,6 @@ void ofApp::setupAudioSystem() {
                 ofxSoundObject& playerOutput = output.getOrCreateChannelGroup({ 0, 1, 2, 3 });
                 player.connectTo(playerOutput);
             }
-           
         }
         else {
             ofxSoundObject& playerOutput = output.getOrCreateChannelGroup({ 0, 1});
@@ -606,9 +605,8 @@ void ofApp::setupAudioSystem() {
     stream.setup(soundSettings);
     stream.setOutput(output);
 
-
+    // if the player is not looping you can register  to the end event, which will get triggered when the player reaches the end of the file
     if (!player.getIsLooping()) {
-        // if the player is not looping you can register  to the end event, which will get triggered when the player reaches the end of the file.
         playerEndListener = player.endEvent.newListener(this, &ofApp::playerEnded);
     }
 
@@ -617,6 +615,7 @@ void ofApp::setupAudioSystem() {
 
 //--------------------------------------------------------------
 void ofApp::setupGui(){
+
     //params
     parameters.setName("Param");
     if (mMasterUDP) {
@@ -624,8 +623,10 @@ void ofApp::setupGui(){
         parameters.add(mResetVideos.set("Reset Videos", false));
     }
     
+    //Master
     parameters.add(mMasterAudio.set("Master Audio", 0, 0, 1.0));
     parameters.add(player.volume);
+
     //add listeners
     if (mMasterUDP) {
         mPlayVideos.addListener(this, &ofApp::playVideos);
@@ -633,21 +634,17 @@ void ofApp::setupGui(){
     }
     mMasterAudio.addListener(this, &ofApp::audioSlider);
     
- 
+    //GUI setup
     mGui.setup(parameters);
-
     mGui.add(&mChanderlier->ledGroup);
-    //setup gui
-
-    //mGui.setSize(300, 200);
     mGui.setPosition(20, 95);
     
     //default values
     mDrawGUI = true;
-    
     mGui.loadFromFile("settings.xml");
 }
 
+//----------------------------------------------------------------
 void ofApp::setupChanderlier() {
 
     ofLog(OF_LOG_NOTICE) << "Loading Chandelier" << std::endl;
@@ -662,7 +659,6 @@ void ofApp::setupChanderlier() {
 //--------------------------------------------------------------
 void ofApp::audioSlider(float & value){
     float audioPosition = float(value);
-
     player.setPosition(value);
 }
 //--------------------------------------------------------------
@@ -704,9 +700,6 @@ void ofApp::drawGui() {
         ofDrawBitmapString("L Count: " + to_string(mLoopCount) + " " + to_string(initCouter), 10, 55);
         ofDrawBitmapString("Frame : " + to_string(mCommon->commonFrame) + " " + to_string(mCommon->maxFrames), 10, 70);
         ofDrawBitmapString("PlayLisy : " + to_string(mPlayListCounter), 10, 90);
-        
-
-
         ofDrawBitmapString(ofPath, 10, 470);
         ofDrawBitmapString("Current Sequence Name: " + mCommon->mCurrentSeqName, 10, 230);
 
