@@ -57,6 +57,7 @@ public:
     ofxGuiGroup ledGroup;
     // TODO: temp fix, figure out how to determine millis in video
     int frameRate = 25;
+    bool useSerial;
 
 private:
     vector<effect> parseVideoEffects(string subtitleFilesPath);
@@ -89,7 +90,7 @@ private:
     int mSerialId;
 
     char receivedData[10];
-    bool useSerial;
+
     bool completedHandshake;
     char handshakeMessage;
 };

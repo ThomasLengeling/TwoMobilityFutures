@@ -24,6 +24,8 @@ void ofApp::setup(){
  
     //Video
     HPV::InitHPVEngine();
+
+ 
     
     setupChanderlier();
 
@@ -62,6 +64,9 @@ void ofApp::setup(){
     mDeltaFrame = 0;
     mDeltaSoundTime = 0.0;
 
+    mPlayListCounter = 0;
+    mPlayListMax = 3;
+
     mDeltaInc = false;
     mDeltaDec = false;
 
@@ -96,6 +101,7 @@ void ofApp::update() {
                 mCommon->commonFrame = mCommon->maxFrames;
                 mLockFpsUpdate = false;
                 mWaitPeriod = true;
+                mLoadPlayList = true;
 
                 ofLog(OF_LOG_NOTICE) << "Done Master Frame";
             }
@@ -189,12 +195,13 @@ void ofApp::update() {
 
             //init sequence on computer start, only once
             initCouter++;
-            if (initCouter > 25 * 10) { //wwiting time
+            if (initCouter > 24 * 10) { //wwiting time
                 ofLog(OF_LOG_NOTICE) << "START MOVIE " << std::endl;
                 startMasterVideo();
 
                 mLoadedVidoes = false;
                 initCouter = 0;
+              
 
                 std::fill(mCommon->mLoadedVideos.begin(), mCommon->mLoadedVideos.end(), true);
                 cout.flush();
@@ -208,23 +215,61 @@ void ofApp::update() {
         if (mWaitPeriod && mAudioDone) {
             
             //waiting
+            //load videos 
             initCouter++;
+            if (mLoadPlayList) {
+                //load videos
 
-            //reset comands, add anything for reset videos
-            if (initCouter > 25 * 5) {
-                ofLog(OF_LOG_NOTICE) << "Reset Play";
+                
+                //send to the slaves to enable video
+                string message = "l " + to_string(mCurrSyncMode);
+                udpSendLeft.Send(message.c_str(), message.length());
+                udpSendCenter.Send(message.c_str(), message.length());
+    
 
-                string message = "d " + to_string(mCurrSyncMode);
-              
+
+                mLoopCount++;
+
+   
+                // load new chandelier effects
+                mChanderlier->loadVideo(mCommon->mCurrentSeqName);
+                mCommon->commonFrame = 0;
+                cout.flush();
+
+
+                //update counter
+                mPlayListCounter++;
+                if (mPlayListCounter > mPlayListMax) {
+                    mPlayListCounter = 0;
+                }
+
+                //load video
+                loadSequence(mPlayListCounter);
+                stopAudio();
+
+
+                setSyncMode(3); //stop
+                message = "s " + to_string(mCurrSyncMode);
                 udpSendLeft.Send(message.c_str(), message.length());
                 udpSendCenter.Send(message.c_str(), message.length());
 
+                mLoadPlayList = false;
                 //syncs 
-                mCurrSyncMode = 1;
-                mStartMS = 0.0;
-                setSyncMode(mCurrSyncMode);
+      
+      
+            }
 
-
+            //reset comands, add anything for reset videos
+            if (initCouter > 24 * 5) {
+                ofLog(OF_LOG_NOTICE) << "Reset Play";
+                mCommon->commonFrame = 0;
+                //
+                // send to slaves start video
+                //send to the slaves to enable video
+                string message = "i " + to_string(mCurrSyncMode);
+                udpSendLeft.Send(message.c_str(), message.length());
+                udpSendCenter.Send(message.c_str(), message.length());
+               
                 //sound reset
                 //player.setPaused(false);
                 if (player.isLoaded()) {
@@ -234,16 +279,17 @@ void ofApp::update() {
                 else {
                     ofLog(OF_LOG_NOTICE) << "Error loading sound on reset";
                 };
-                mCommon->commonFrame = 0;
 
-                mLoopCount++;
-                cout.flush();
-                initCouter = 0;
+                //syncs 
+                mCurrSyncMode = 1;
+                mStartMS = 0.0;
+                setSyncMode(mCurrSyncMode);
+
                 mWaitPeriod = false;
                 mAudioDone = false;
-
-                // load new chandelier effects
-                mChanderlier->loadVideo(mCommon->mCurrentSeqName);
+                initCouter = 0;
+                //reset
+                mCommon->commonFrame = 0;
             }
         }
     }
@@ -286,6 +332,33 @@ void ofApp::updateUDP() {
         if (message[0] == 'a') {
             
         }
+
+        //load videos
+        if (message[0] == 'l') {
+
+        }
+
+        //play videos
+        if (message[0] == 'i') {
+            auto smsg = string_split(message);
+            if (smsg.size() >= 1) {
+                mCurrSyncMode = std::stoi(smsg[1]);
+            }
+            else {
+                mCurrSyncMode = 0;
+            }
+            setSyncMode(mCurrSyncMode);
+
+            //sound reset
+            std::fill(mCommon->mLoadedVideos.begin(), mCommon->mLoadedVideos.end(), true);
+            mCommon->commonFrame = 0;
+            if (player.isLoaded()) {
+                player.setPosition(0.0);
+                player.setVolume(0.0);
+            }
+        }
+
+
         if (message[0] == 'd') {
 
             auto smsg = string_split(message);
@@ -308,15 +381,30 @@ void ofApp::updateUDP() {
 
         }
 
-        if (message[0] == 'f') {            
+        //send commom frame and time
+        if (message[0] == 'f') {
+            auto smsg = string_split(message);
+            if (smsg.size() >= 1) {
+                mCommon->audioPos = std::stof(smsg[1]);
+                mMasterAudio.set(mCommon->audioPos);
+            }
+            mCommon->commonFrame = mCommon->maxFrames * mCommon->audioPos;
         }
 
         //stop
         if (message[0] == 's') {
+            //HPV::InitHPVEngine();
+
+            mCommon->commonFrame = 0;
+            if (player.isLoaded()) {
+                player.setPosition(0.0);
+                player.setVolume(0.0);
+            }
+           // mLockFpsUpdate = false;
             //send UDP start
             setSyncMode(3); //off
-            player.setPosition(0.0);
-            player.setPaused(true);
+           // player.setPosition(0.0);
+           // player.setPaused(true);
         }
         // send time
         if (message[0] == 't') {
@@ -508,8 +596,15 @@ void ofApp::setupAudioSystem() {
     //Configure audio channels
     if (player.isLoaded()) {
         if (mMasterUDP) {
-            ofxSoundObject& playerOutput = output.getOrCreateChannelGroup({ 0, 1, 2, 3 });
-            player.connectTo(playerOutput);
+            if (player.getSoundFile().getNumChannels() == 2) {
+                ofxSoundObject& playerOutput = output.getOrCreateChannelGroup({ 0, 1});
+                player.connectTo(playerOutput);
+            }
+            if (player.getSoundFile().getNumChannels() == 4) {
+                ofxSoundObject& playerOutput = output.getOrCreateChannelGroup({ 0, 1, 2, 3 });
+                player.connectTo(playerOutput);
+            }
+           
         }
         else {
             ofxSoundObject& playerOutput = output.getOrCreateChannelGroup({ 0, 1});
@@ -576,6 +671,7 @@ void ofApp::setupChanderlier() {
 
     mChanderlier = Chandelier::create();
     mChanderlier->initSerial(0, 9600);
+    mChanderlier->useSerial = false;
     mChanderlier->initVideoEffects(mCommon->mSeqNames);
     mChanderlier->initGui();
 }
@@ -624,6 +720,8 @@ void ofApp::drawGui() {
         ofSetColor(255);
         ofDrawBitmapString("L Count: " + to_string(mLoopCount) + " " + to_string(initCouter), 10, 55);
         ofDrawBitmapString("Frame : " + to_string(mCommon->commonFrame) + " " + to_string(mCommon->maxFrames), 10, 70);
+        ofDrawBitmapString("PlayLisy : " + to_string(mPlayListCounter), 10, 90);
+        
 
 
         ofDrawBitmapString(ofPath, 10, 470);
@@ -648,7 +746,7 @@ void ofApp::drawGui() {
             ofDrawRectangle(355, 120, 30, 30);
 
             ofDrawBitmapString("Video: " + mCommon->mVideoType, 320, 15);
-            ofDrawBitmapString("Audio: " + mAudioDevice + "O: " + to_string(mAudioOutputs), 320, 30);
+            ofDrawBitmapString("Audio: " + mAudioDevice + "O: " + to_string(mAudioOutputs)+ " a c: "+ to_string(player.getSoundFile().getNumChannels()), 320, 30);
             ofDrawBitmapString("Serial: " +mChanderlier->getSerialName() + " "+to_string(mChanderlier->getSerialId())+" "+ to_string(mChanderlier->getBaudRate()), 320, 45);
         }
 
@@ -837,15 +935,25 @@ void ofApp::keyPressed(int key){
     if (key == ' ') {
     }
     
+
+    //move to position 0.99
     if (key == 'e') {
-        player.setPosition(0.99);
-        ofLog(OF_LOG_NOTICE) << "end  mode";
+        float pos = 0.99;
+        mCommon->commonFrame = mCommon->maxFrames * pos;
+        player.setPosition(pos);
+
+        string message = "f 99";
+        udpSendLeft.Send(message.c_str(), message.length());
+        udpSendCenter.Send(message.c_str(), message.length());
+
+        ofLog(OF_LOG_NOTICE) << "pos  mode";
     }
     if (key == 'g') {
         mDrawGUI = !mDrawGUI;
         ofLog(OF_LOG_NOTICE) << "gui";
     }
 
+    //stop audio
     if (key == 's') {
         stopAudio();
         mVideoSyncPlaying = false;
@@ -876,6 +984,7 @@ void ofApp::keyPressed(int key){
         }
     }
 
+    //start videos with frame loop sync
     if (key == 'f') {  //frame
         if (mMasterUDP) {
             ofLog(OF_LOG_NOTICE) << "send Master";
@@ -920,7 +1029,7 @@ void ofApp::keyPressed(int key){
 
     }
     
-    //handshake
+    //handshake with video slaves
     if(key == 'h'){
 
         if (mMasterUDP) {

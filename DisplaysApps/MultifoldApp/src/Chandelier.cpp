@@ -1,8 +1,7 @@
 #include "Chandelier.h"
 
 Chandelier::Chandelier() {
-    useSerial = false;
-    ;
+    useSerial = true;
     completedHandshake = false;
     handshakeMessage = 's';
     mSerialId = 0;
@@ -43,6 +42,7 @@ void Chandelier::initSerial(int portid, int baud) {
 
 //---------------------------------------------------------
 void Chandelier::updateSerial() {
+    if (!useSerial) return;
     if (mSerial.available()) {
         // TODO: not fully implemented on arduino end
         if (!completedHandshake) {
@@ -190,20 +190,25 @@ void Chandelier::initVideoEffects(vector<string> videoNames) {
 // Access data from individual subtitle caption (seperated because this could later get more complex/ nuanced)
 vector<effect> Chandelier::parseVideoEffects(string subtitleFilesPath) {
     SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(subtitleFilesPath);
+ 
     SubtitleParser *parser = subParserFactory->getParser();
     vector<SubtitleItem *> subs = parser->getSubtitles();
 
     vector<effect> effects;
-    for (SubtitleItem *element : subs) {
-        vector<std::string> words = element->getIndividualWords();
-        if (words.empty()) continue;
+    if (subs.size() > 0) {
+        for (SubtitleItem* element : subs) {
+            vector<std::string> words = element->getIndividualWords();
+            if (words.empty()) continue;
 
-        effect e;
-        e.startTime = element->getStartTime();
-        cout << e.startTime << " " << words.front() << endl;
-        e.type = words.front();           // name of effect
-        e.code = std::stoi(words.at(1));  // byte code TODO: create enum to perform string/ code lookup
-        effects.push_back(e);
+            effect e;
+            e.startTime = element->getStartTime();
+            cout << e.startTime << " " << words.front() << endl;
+            e.type = words.front();           // name of effect
+            if (words.size() > 1) {
+                e.code = std::stoi(words.at(1));  // byte code TODO: create enum to perform string/ code lookup
+                effects.push_back(e);
+            }
+        }
     }
     cout.flush();
     return effects;
@@ -223,8 +228,8 @@ void Chandelier::getVideos() {
 // Trigger specified effect at timestamp
 void Chandelier::updateEffects(int currentFrame, float currentFPS) {
     float currentMillis = currentFrame / currentFPS * 1000;
-    cout << "current frame " << currentFrame;
-    cout << "\ncurrent position " << currentMillis << "\n";
+   // cout << "current frame " << currentFrame;
+    //cout << "\ncurrent position " << currentMillis << "\n";
 
     for (auto effect = currentVideo.effects.begin(); effect != currentVideo.effects.end(); ++effect) {
         if (currentMillis < effect->startTime) continue;

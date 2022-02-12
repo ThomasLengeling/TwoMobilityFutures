@@ -68,6 +68,7 @@ void WindowVideoApp::update() {
 		if (mCurrentSetId < mVideoSets.size()) {
 			mVideoPlayer->close();
 			mVideoPlayer->loadVideo(mVideoSets[mCurrentSetId]);
+			mCommon->maxFrames = mVideoPlayer->getTotalNumFrames();
 			mCommon->mNewVideos[mId] = false;
 			mCommon->maxFrames = mVideoPlayer->getTotalNumFrames();
 			ofLog(OF_LOG_NOTICE) << "Loaded Init Video " << mId;
