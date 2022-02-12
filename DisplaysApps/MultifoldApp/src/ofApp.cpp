@@ -87,11 +87,13 @@ void ofApp::update() {
         //update audio pos
         double audioPos = player.getPosition();
         mMasterAudio.set(audioPos);
+
+
         //lock the fps with app frame rate
         if (mLockFpsUpdate) {
             //frame update 
             mCommon->commonFrame++;
-           
+
             //chandelier update 
             mChanderlier->updateSerial();
             mChanderlier->updateEffects(mCommon->commonFrame, ofGetFrameRate());
@@ -121,74 +123,13 @@ void ofApp::update() {
         else if (mLockFpsUDPAudio) {
             sendAudioPosUDP(audioPos);
         }
-    }
-
-      //if receiving udp then is a salve
-    if (mSlaveUDP) {
-        double audioPos = player.getPosition();
-        mMasterAudio.set(audioPos);
-        mCommon->audioPos = audioPos;
-
-        updateUDP();
-
-        if (mLockFpsUpdate) { 
-            mCommon->commonFrame++;
-
-            if (mDeltaFrame > 2) {
-                if (ofGetFrameNum() % 10 == 0) {
-                    mCommon->commonFrame++;
-                    mDeltaInc = true;
-                } else{
-                    mDeltaInc = false;
-                }
-            }
-
-            if (mDeltaFrame < -2) {
-                if (ofGetFrameNum() % 10 == 0) {
-                    mCommon->commonFrame--;
-                    mDeltaDec = true;
-                }
-                else {
-                    mDeltaDec = false;
-                }
-            }
-
-            //reset
-            if (mCommon->commonFrame >= mCommon->maxFrames) {
-                mCommon->commonFrame = mCommon->maxFrames;
-
-                mLockFpsUpdate = false;
-                ofLog(OF_LOG_NOTICE) << "Done Master Frame";
-            }
-
-        } //lock fps with audio update
-        else if (mLockFpsAudio) {
-            
-            mMasterAudio.set(audioPos);
-            mCommon->audioPos = audioPos;
-        }  //lock the fps with udp audio
-        else if (mLockFpsUDPAudio) {
-            
-        }
-
-    }
-
-    //master reset videos
-    //--------------------------------
-    if (mMasterUDP) {
-
-        //if video has finished playing go to wait period
-        if (mVideoSyncPlaying) {
-            //reset videos once the video is done playing
-            //if (player.getPosition() >= 0.9999) {
-           //     mWaitPeriod = true;
-           // }
-        }
 
         //check if the audio has finished playing
         if (player.getPosition() >= 1.0) {
             mAudioDone = true;
         }
+
+        //------------------------
 
         //load period
         if (mLoadedVidoes) {
@@ -201,41 +142,34 @@ void ofApp::update() {
 
                 mLoadedVidoes = false;
                 initCouter = 0;
-              
 
                 std::fill(mCommon->mLoadedVideos.begin(), mCommon->mLoadedVideos.end(), true);
                 cout.flush();
 
                 //initial comands to start the chandelier
                 ///
-
             }
         }
+
         //wait and reset
         if (mWaitPeriod && mAudioDone) {
-            
-            //waiting
-            //load videos 
+
+            //waiting period for the load videos 
             initCouter++;
             if (mLoadPlayList) {
                 //load videos
 
-                
                 //send to the slaves to enable video
                 string message = "l " + to_string(mCurrSyncMode);
                 udpSendLeft.Send(message.c_str(), message.length());
                 udpSendCenter.Send(message.c_str(), message.length());
-    
-
 
                 mLoopCount++;
 
-   
                 // load new chandelier effects
                 mChanderlier->loadVideo(mCommon->mCurrentSeqName);
                 mCommon->commonFrame = 0;
                 cout.flush();
-
 
                 //update counter
                 mPlayListCounter++;
@@ -247,7 +181,6 @@ void ofApp::update() {
                 loadSequence(mPlayListCounter);
                 stopAudio();
 
-
                 setSyncMode(3); //stop
                 message = "s " + to_string(mCurrSyncMode);
                 udpSendLeft.Send(message.c_str(), message.length());
@@ -255,8 +188,6 @@ void ofApp::update() {
 
                 mLoadPlayList = false;
                 //syncs 
-      
-      
             }
 
             //reset comands, add anything for reset videos
@@ -269,7 +200,7 @@ void ofApp::update() {
                 string message = "i " + to_string(mCurrSyncMode);
                 udpSendLeft.Send(message.c_str(), message.length());
                 udpSendCenter.Send(message.c_str(), message.length());
-               
+
                 //sound reset
                 //player.setPaused(false);
                 if (player.isLoaded()) {
@@ -294,6 +225,59 @@ void ofApp::update() {
         }
     }
 
+    ///-----------------------------
+    //if receiving udp then is a salve
+    if (mSlaveUDP) {
+        double audioPos = player.getPosition();
+        mMasterAudio.set(audioPos);
+        mCommon->audioPos = audioPos;
+
+        //send UDP
+        updateUDP();
+
+        if (mLockFpsUpdate) {
+            mCommon->commonFrame++;
+
+            //update frame change 
+            if (mDeltaFrame > 2) {
+                if (ofGetFrameNum() % 10 == 0) {
+                    mCommon->commonFrame++;
+                    mDeltaInc = true;
+                }
+                else {
+                    mDeltaInc = false;
+                }
+            }
+
+            if (mDeltaFrame < -2) {
+                if (ofGetFrameNum() % 10 == 0) {
+                    mCommon->commonFrame--;
+                    mDeltaDec = true;
+                }
+                else {
+                    mDeltaDec = false;
+                }
+            }
+
+            //reset
+            if (mCommon->commonFrame >= mCommon->maxFrames) {
+                mCommon->commonFrame = mCommon->maxFrames;
+
+                mLockFpsUpdate = false;
+                ofLog(OF_LOG_NOTICE) << "Done Master Frame";
+            }
+
+        } //lock fps with audio update
+        else if (mLockFpsAudio) {
+            mMasterAudio.set(audioPos);
+            mCommon->audioPos = audioPos;
+        }  
+        //lock the fps with udp audio
+        else if (mLockFpsUDPAudio) {
+
+        }
+    }
+
 
     //update osc
    // updateOSC();
@@ -302,9 +286,8 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    
     drawGui();
-  
+
 }
 
 //--------------------------------------------------------------
