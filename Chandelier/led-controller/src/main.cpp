@@ -71,9 +71,9 @@ void startOff(bool isSequential = false) {
   }
 }
 
-void startBreath() {
+void startBreath(int speed = 5000) {
   for (int i = 0; i < LED_COUNT; i++) {
-    leds[i].Breathe(5000).Forever();
+    leds[i].Breathe(speed).Forever();
   }
 }
 
@@ -116,8 +116,8 @@ void startFadeOn(bool isSequential = false, int speed = 1000) {
 
 void startFadeOff(bool isSequential = false, int speed = 1000) {
   for (int i = 0; i < LED_COUNT; i++) {
-      leds[i].On();
-    }
+    leds[i].On();
+  }
   if (isSequential == true) {
     int delay = 1000;
     for (int i = 0; i < LED_COUNT; i++) {
@@ -139,9 +139,9 @@ void setup() {
 }
 
 void reset() {
-    for (int i = 0; i < LED_COUNT; i++) {
-              leds[i].DelayBefore(0).DelayAfter(0).Repeat(1).Stop();
-    }
+  for (int i = 0; i < LED_COUNT; i++) {
+    leds[i].DelayBefore(0).DelayAfter(0).Repeat(1).Stop();
+  }
 }
 
 void loop() {
@@ -221,46 +221,104 @@ void loop() {
   }
 }
 
+
+//const int BUFFER_SIZE = 24;
+//char buf[BUFFER_SIZE];
 //
 // void loop() {
-//    String incomingCommand = Serial.readString();
-//    Serial.println(incomingCommand);
-//    if (incomingCommand == "s") {
-//        Serial.write("s");
-//    }
-//    int command = incomingCommand.toInt();
+////    int inputLength = Serial.readBytes(buf, 3);
+//////    int command = atoi(strtok(buf, ","));
+////    int speed= atoi(strtok(NULL, ",")) * 1000;
+//    //https://arduino.stackexchange.com/questions/77081/arduino-split-comma-separated-serial-stream
+////    int command = atoi(strtok(buf, ","));
+////    int speed= atoi(strtok(NULL, ",")) * 1000;
+//    
+//    memset(buf, 0, 3);
+//
+//    Serial.print("command: ");
+//    Serial.println(command);
+//    Serial.print("speed: ");
+//    Serial.println(speed);
+//    
+//   
 //    if (command == 1) {
+//        reset();
 //        currentMode = ON;
-//        Serial.write("on");
-//        startOn();
+//        Serial.println("on");
+//        startFadeOn(false);
 //    }
-//    if (command == OFF) {
+//    if (command == 2) {
+//        reset();
 //        currentMode = OFF;
-//        Serial.write("off");
-//        startOff();
+//      Serial.write("off");
+//      startOff(false);
 //    }
-//    if (command == BREATH) {
+//    if (command == 3) {
+//        currentMode = BREATH;
+//        Serial.write("breathe");
+//        startBreath(speed);
+//    }
+////    if (command == FLICKER) {
+////        currentMode = FLICKER;
+////        Serial.write("flicker");
+////        startFlicker();
+////    }
+////    if (command == STROBE) {
+////        currentMode = STROBE;
+////        Serial.write("strobe");
+////        startStrobe();
+////    }
+////    if (command == RANDOM_STROBE) {
+////        currentMode = RANDOM_STROBE;
+////        Serial.write("random strobe");
+////        startRandomStrobe();
+////    }
+////
+////    // send interupt on chnage
+//    for (int i = 0; i < LED_COUNT; i++) {
+//        leds[i].Update();
+//    }
+//}
+
+
+// void loop() {
+//  String command = Serial.readString();
+//    
+//   
+//    if (command.toInt() == 1) {
+//        reset();
+//        currentMode = ON;
+//        Serial.println("on");
+//        startFadeOn(false);
+//    }
+//    if (command == 2) {
+//        reset();
+//        currentMode = OFF;
+//      Serial.write("off");
+//      startOff(false);
+//    }
+//    if (command == 3) {
 //        currentMode = BREATH;
 //        Serial.write("breathe");
 //        startBreath();
 //    }
-//    if (command == FLICKER) {
-//        currentMode = FLICKER;
-//        Serial.write("flicker");
-//        startFlicker();
-//    }
-//    if (command == STROBE) {
-//        currentMode = STROBE;
-//        Serial.write("strobe");
-//        startStrobe();
-//    }
-//    if (command == RANDOM_STROBE) {
-//        currentMode = RANDOM_STROBE;
-//        Serial.write("random strobe");
-//        startRandomStrobe();
-//    }
-//
-//    // send interupt on chnage
+////    if (command == FLICKER) {
+////        currentMode = FLICKER;
+////        Serial.write("flicker");
+////        startFlicker();
+////    }
+////    if (command == STROBE) {
+////        currentMode = STROBE;
+////        Serial.write("strobe");
+////        startStrobe();
+////    }
+////    if (command == RANDOM_STROBE) {
+////        currentMode = RANDOM_STROBE;
+////        Serial.write("random strobe");
+////        startRandomStrobe();
+////    }
+////
+////    // send interupt on chnage
 //    for (int i = 0; i < LED_COUNT; i++) {
 //        leds[i].Update();
 //    }
