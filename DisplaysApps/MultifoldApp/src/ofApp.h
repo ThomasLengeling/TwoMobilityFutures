@@ -176,6 +176,10 @@ public:
     bool mWaitPeriod;
     int mCurrSyncMode;
 
+    int mPlayListCounter;
+    int mPlayListMax;
+    bool mLoadPlayList;
+
     int mDeltaFrame;
     bool mDeltaInc;
     bool mDeltaDec;
@@ -186,6 +190,7 @@ public:
     void setupChanderlier();
     void updateChandelier();
 
+ 
 };
 
 //---------------------------

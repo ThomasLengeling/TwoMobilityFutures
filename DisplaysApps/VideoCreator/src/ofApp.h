@@ -20,5 +20,14 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
+
+		std::vector<std::string> mFolderNames;
+		std::string path;
+		bool loadPath;
+
+		std::string fileExtension;
 		
+
+		std::string selectedPath;
+		std::string selectedName;
 };
