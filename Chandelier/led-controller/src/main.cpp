@@ -15,6 +15,7 @@ int pins[] = {teensyPins[8], teensyPins[4],  teensyPins[1],  teensyPins[14], tee
               teensyPins[2], teensyPins[13], teensyPins[11], teensyPins[15], teensyPins[5], teensyPins[10]
              };
 
+// example orientation pins
 int northPins[] = {1, 2, 3, 4};
 // etc, ...
 
@@ -132,7 +133,7 @@ void startFadeOff(bool isSequential = false, int speed = 1000) {
 }
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   for (int i = 0; i < LED_COUNT; i++) {
     pinMode(pins[i], OUTPUT);
   }
@@ -143,8 +144,8 @@ void reset() {
     leds[i].DelayBefore(0).DelayAfter(0).Repeat(1).Stop();
   }
 }
-
-void loop() {
+/*
+  void loop() {
   char incomingByte = Serial.read();
 
   Serial.println(incomingByte);
@@ -219,72 +220,81 @@ void loop() {
   for (int i = 0; i < LED_COUNT; i++) {
     leds[i].Update();
   }
+  }
+*/
+
+const int BUFFER_SIZE = 24;
+char buf[BUFFER_SIZE];
+
+
+void loop() {
+  int inputLength = Serial.readBytes(buf, BUFFER_SIZE);
+  Serial.println(inputLength);
+  if (inputLength == 0) {
+    for (int i = 0; i < LED_COUNT; i++) {
+      leds[i].Update();
+    }
+    return;
+  }
+  //   //https://arduino.stackexchange.com/questions/77081/arduino-split-comma-separated-serial-stream
+  int command = atoi(strtok(buf, ","));
+  int speed = atoi(strtok(NULL, ",")) * 1000;
+
+  memset(buf, 0, BUFFER_SIZE);
+
+  Serial.print("command: ");
+  Serial.println(command);
+  Serial.print("speed: ");
+  Serial.println(speed);
+
+  if (command == 1) {
+    reset();
+    currentMode = ON;
+    Serial.println("on");
+    startOn();
+  }
+  if (command == 2) {
+    reset();
+    currentMode = OFF;
+    Serial.write("off");
+    startOff();
+  }
+  if (command == 3) {
+    reset();
+    currentMode = BREATH;
+    Serial.write("breathe");
+    startBreath(speed);
+  }
+  if (command == FLICKER) {
+    reset();
+    currentMode = FLICKER;
+    Serial.write("flicker");
+    startFlicker();
+  }
+  if (command == STROBE) {
+    reset();
+    currentMode = STROBE;
+    Serial.write("strobe");
+    startStrobe();
+  }
+  if (command == RANDOM_STROBE) {
+    reset();
+    currentMode = RANDOM_STROBE;
+    Serial.write("random strobe");
+    startRandomStrobe();
+  }
+
+  // send interupt on chnage
+  for (int i = 0; i < LED_COUNT; i++) {
+    leds[i].Update();
+  }
 }
-
-
-//const int BUFFER_SIZE = 24;
-//char buf[BUFFER_SIZE];
-//
-// void loop() {
-////    int inputLength = Serial.readBytes(buf, 3);
-//////    int command = atoi(strtok(buf, ","));
-////    int speed= atoi(strtok(NULL, ",")) * 1000;
-//    //https://arduino.stackexchange.com/questions/77081/arduino-split-comma-separated-serial-stream
-////    int command = atoi(strtok(buf, ","));
-////    int speed= atoi(strtok(NULL, ",")) * 1000;
-//    
-//    memset(buf, 0, 3);
-//
-//    Serial.print("command: ");
-//    Serial.println(command);
-//    Serial.print("speed: ");
-//    Serial.println(speed);
-//    
-//   
-//    if (command == 1) {
-//        reset();
-//        currentMode = ON;
-//        Serial.println("on");
-//        startFadeOn(false);
-//    }
-//    if (command == 2) {
-//        reset();
-//        currentMode = OFF;
-//      Serial.write("off");
-//      startOff(false);
-//    }
-//    if (command == 3) {
-//        currentMode = BREATH;
-//        Serial.write("breathe");
-//        startBreath(speed);
-//    }
-////    if (command == FLICKER) {
-////        currentMode = FLICKER;
-////        Serial.write("flicker");
-////        startFlicker();
-////    }
-////    if (command == STROBE) {
-////        currentMode = STROBE;
-////        Serial.write("strobe");
-////        startStrobe();
-////    }
-////    if (command == RANDOM_STROBE) {
-////        currentMode = RANDOM_STROBE;
-////        Serial.write("random strobe");
-////        startRandomStrobe();
-////    }
-////
-////    // send interupt on chnage
-//    for (int i = 0; i < LED_COUNT; i++) {
-//        leds[i].Update();
-//    }
-//}
 
 
 // void loop() {
 //  String command = Serial.readString();
-//    
-//   
+//
+//
 //    if (command.toInt() == 1) {
 //        reset();
 //        currentMode = ON;
