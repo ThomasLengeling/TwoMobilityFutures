@@ -22,6 +22,7 @@ struct effect {
     int frame;
     int startTime;
     int code;
+    int speed;
     string type;
 };
 struct video {
@@ -79,6 +80,10 @@ private:
     ofxButton ledButtonCandle;
     ofxButton ledButtonStrobe;
     ofxButton ledButtonRandomStrobe;
+    ofxButton ledButtonFadeOn;
+    ofxButton ledButtonFadeOff;
+    ofxButton ledButtonFadeOnSequential;
+    ofxButton ledButtonFadeOffSequential;
 
     ofxPanel scrub;
     ofParameter<int> scrubber;

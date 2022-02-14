@@ -5,7 +5,7 @@ Chandelier::Chandelier() {
     completedHandshake = false;
     handshakeMessage = 's';
     mSerialId = 0;
-    mSerialBaudRate = 9600;
+    mSerialBaudRate = 115200;
 }
 //---------------------------------------------------------
 void Chandelier::initSerial(int portid, int baud) {
@@ -86,6 +86,28 @@ void Chandelier::updateSerial() {
             mSerial.writeByte(myByte);
             printf("random strobe\n");
         }
+        if (ledButtonFadeOn) {
+            unsigned char buf[1] = {7};
+            mSerial.writeBytes(&buf[0], 1);
+            printf("pressed fade on\n");
+        }
+        if (ledButtonFadeOff) {
+            unsigned char buf[1] = {8};
+            mSerial.writeBytes(&buf[0], 1);
+            printf("pressed fade off\n");
+        }
+        if (ledButtonFadeOnSequential) {
+            unsigned char buf[1] = {9};
+            mSerial.writeBytes(&buf[0], 1);
+            printf("pressed fade on sequential\n");
+        }
+        /*
+        if (ledButtonFadeOffSequential) {
+            unsigned char buf[1] = {'10'};
+            mSerial.writeBytes(&buf[0], 1);
+            printf("fade on sequential\n");
+        }
+        */
         cout.flush();
     }
 }
@@ -116,6 +138,10 @@ void Chandelier::initGui() {
     ledGroup.add(ledButtonCandle.setup("LED Candle"));
     ledGroup.add(ledButtonStrobe.setup("LED Strobe"));
     ledGroup.add(ledButtonRandomStrobe.setup("LED Random Strobe"));
+    ledGroup.add(ledButtonFadeOn.setup("Fade In"));
+    ledGroup.add(ledButtonFadeOff.setup("Fade Off"));
+    ledGroup.add(ledButtonFadeOnSequential.setup("Fade In Seq"));
+    ledGroup.add(ledButtonFadeOffSequential.setup("Fade Off Seq"));
     // gui.add(&videoGroup);
     // gui.add(&ledGroup);
 
@@ -190,20 +216,20 @@ void Chandelier::initVideoEffects(vector<string> videoNames) {
 // Access data from individual subtitle caption (seperated because this could later get more complex/ nuanced)
 vector<effect> Chandelier::parseVideoEffects(string subtitleFilesPath) {
     SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(subtitleFilesPath);
- 
+
     SubtitleParser *parser = subParserFactory->getParser();
     vector<SubtitleItem *> subs = parser->getSubtitles();
 
     vector<effect> effects;
     if (subs.size() > 0) {
-        for (SubtitleItem* element : subs) {
+        for (SubtitleItem *element : subs) {
             vector<std::string> words = element->getIndividualWords();
             if (words.empty()) continue;
 
             effect e;
             e.startTime = element->getStartTime();
             cout << e.startTime << " " << words.front() << endl;
-            e.type = words.front();           // name of effect
+            e.type = words.front();  // name of effect
             if (words.size() > 1) {
                 e.code = std::stoi(words.at(1));  // byte code TODO: create enum to perform string/ code lookup
                 effects.push_back(e);
@@ -228,16 +254,14 @@ void Chandelier::getVideos() {
 // Trigger specified effect at timestamp
 void Chandelier::updateEffects(int currentFrame, float currentFPS) {
     float currentMillis = currentFrame / currentFPS * 1000;
-   // cout << "current frame " << currentFrame;
-    //cout << "\ncurrent position " << currentMillis << "\n";
+    // cout << "current frame " << currentFrame;
+    // cout << "\ncurrent position " << currentMillis << "\n";
 
     for (auto effect = currentVideo.effects.begin(); effect != currentVideo.effects.end(); ++effect) {
         if (currentMillis < effect->startTime) continue;
 
         mSerial.writeByte((char)effect->code);
-        printf("----------------------------------------");
-        printf("%c", effect->type.c_str());
-        printf("----------------------------------------");
+        printf("----------- %c -----------", effect->type.c_str());
         currentVideo.effects.erase(currentVideo.effects.begin());
         break;
     }
