@@ -11,12 +11,11 @@ void ofApp::setup() {
     initGui();
     initSerial();
     // used for test app
-    /*
-    loadJSON(jsonPath);
-    vector<string> videos = { "woman-test" };
+
+    // loadJSON(jsonPath);
+    vector<string> videos = {"woman-test"};
     initVideoEffects(videos);
     loadVideo("woman-test");
-    */
     getVideos();
     ofSetFrameRate(frameRate);
 }
@@ -39,6 +38,8 @@ void ofApp::draw() {
     gui.draw();
     scrub.draw();
     drawStats();
+    if (!completedHandshake) {
+    }
 }
 
 /*
@@ -47,91 +48,98 @@ void ofApp::draw() {
 
 void ofApp::initSerial() {
     if (useSerial) {
-        int baud = 9600;
+        int baud = 115200;
         mserial.setup(1, baud);
     }
 }
 
 // Read/ write serial
 void ofApp::updateSerial() {
+    // NOTE: format "name, code, speed, [pins]"
     if (mserial.available()) {
-        // TODO: not fully implemented on arduino end
-        mserial.readBytes(receivedData, 1);
-        
-        if (!completedHandshake) {
-            requestHandshake();
-            cout << "recieved data: " << (char*)receivedData << endl;
-        }
+        ofRect(0, 0, 2000, 2000);
+        mserial.readBytes(receivedData, 8);
 
-        if (receivedData != NULL) {
-            cout.flush();
+        if (receivedData != NULL && !completedHandshake) {
+            // const char message = "s";
+            // cout << "recieved data:                  " << typeid(receivedData).name() << endl;
+            // cout << "recieved data: receivedData[0]: " << typeid(receivedData[0]).name() << endl;
+            // cout << "recieved data: \"s\":           " << typeid("s").name() << endl;
+            // cout << "recieved data: 's'              " << typeid('s').name() << endl;
+            // cout << "recieved data: 's'              " << typeid(message).name() << endl;
+            // const char message = "s";
             if (receivedData[0] == 's') {
                 cout << "handshake success" << endl;
                 completedHandshake = true;
             }
         }
-
-        // NOTE: only triggered by GUI
-        if (ledButtonOn) {
-            unsigned char buf[1] = {1};
-            mserial.writeBytes(&buf[0], 1);
-            printf("pressed on\n");
-        }
-        if (ledButtonOff) {
-            unsigned char buf[1] = {2};
-            mserial.writeBytes(&buf[0], 1);
-            printf("pressed off\n");
-        }
-        if (ledButtonBreathe) {
-            unsigned char buf[1] = {3};
-            mserial.writeBytes(&buf[0], 1);
-            printf("pressed breath\n");
-        }
-        if (ledButtonCandle) {
-            unsigned char buf[1] = {4};
-            mserial.writeBytes(&buf[0], 1);
-            printf("pressed candle\n");
-        }
-        if (ledButtonStrobe) {
-            unsigned char buf[1] = {5};
-            mserial.writeBytes(&buf[0], 1);
-            printf("pressed strobe\n");
-        }
-        if (ledButtonRandomStrobe) {
-            unsigned char buf[1] = {6};
-            mserial.writeBytes(&buf[0], 1);
-            printf("pressed random strobe\n");
-        }
-        if (ledButtonFadeOn) {
-            unsigned char buf[1] = {7};
-            mserial.writeBytes(&buf[0], 1);
-            printf("pressed fade on\n");
-        }
-        if (ledButtonFadeOff) {
-            unsigned char buf[1] = {8};
-            mserial.writeBytes(&buf[0], 1);
-            printf("pressed fade off\n");
-        }
-        if (ledButtonFadeOnSequential) {
-            unsigned char buf[1] = {9};
-            mserial.writeBytes(&buf[0], 1);
-            printf("pressed fade on sequential\n");
-        }
-        // if (ledButtonFadeOffSequential) {
-        //     unsigned char buf[1] = {'10'};
-        //     mserial.writeBytes(&buf[0], 1);
-        //     printf("fade on sequential\n");
-        // }
-        cout.flush();
     }
+
+    if (!completedHandshake) {
+        requestHandshake();
+    }
+
+    // NOTE: only triggered by GUI
+    if (ledButtonOn) {
+        char* buf = "1";
+        mserial.writeBytes(buf, 8);
+        printf("pressed on\n");
+    }
+    if (ledButtonOff) {
+        char* buf = "2,2000";
+        mserial.writeBytes(buf, 8);
+        printf("pressed off\n");
+    }
+    if (ledButtonBreathe) {
+        char* buf = "3,500";
+        mserial.writeBytes(buf, 8);
+        printf("pressed breathe\n");
+    }
+    if (ledButtonCandle) {
+        char* buf = "4,500";
+        mserial.writeBytes(buf, 8);
+        printf("pressed candle\n");
+    }
+    if (ledButtonStrobe) {
+        char* buf = "5,500";
+        mserial.writeBytes(buf, 8);
+        printf("pressed strobe\n");
+    }
+    if (ledButtonRandomStrobe) {
+        char* buf = "6,500";
+        mserial.writeBytes(buf, 8);
+        printf("pressed random strobe\n");
+    }
+    if (ledButtonFadeOn) {
+        char* buf = "7,500";
+        mserial.writeBytes(buf, 8);
+        printf("pressed fade on\n");
+    }
+
+    if (ledButtonFadeOff) {
+        char* buf = "8,500";
+        mserial.writeBytes(buf, 8);
+        printf("pressed fade off\n");
+    }
+    if (ledButtonFadeOnSequential) {
+        char* buf = "9,500";
+        mserial.writeBytes(buf, 8);
+        printf("pressed fade on seq\n");
+    }
+    if (ledButtonFadeOffSequential) {
+        char* buf = "10,500";
+        mserial.writeBytes(buf, 8);
+        printf("pressed fade off seq\n");
+    }
+    cout.flush();
 }
 
 // Initilize handshake with Teensy
 // TODO: not fully implemented on Teensy side
 void ofApp::requestHandshake() {
-    // cout << "requesting handshake\n";
-    unsigned char buf[1] = {'s'};
-    mserial.writeBytes(&buf[0], 1);
+    cout << "requesting handshake\n";
+    char* buf = "s";
+    mserial.writeBytes(buf, 8);
 }
 
 /*
@@ -179,7 +187,7 @@ void ofApp::updateControls() {
     }
 }
 
-void ofApp::updateScrubber(int &value) {
+void ofApp::updateScrubber(int& value) {
     printf("set frame: %i\n", value);
     cout.flush();
     player.setFrame(scrubber);
@@ -231,7 +239,7 @@ void ofApp::initVideoEffects(vector<string> videoNames) {  // loadSubtitles(stri
 
     for (int i = 0; i < videoNames.size(); i++) {
         string videoName = videoNames[i];
-        string videoSubtitlesPath = subtitlesDir + videoName + ".srt";
+        string videoSubtitlesPath = subtitlesDir + "luggage" + ".srt";
         cout << videoName << " " << videoSubtitlesPath << endl;
         video v;
         v.name = videoName;
@@ -243,12 +251,12 @@ void ofApp::initVideoEffects(vector<string> videoNames) {  // loadSubtitles(stri
 
 // Access data from individual subtitle caption (seperated because this could later get more complex/ nuanced)
 vector<effect> ofApp::parseVideoEffects(string subtitleFilesPath) {
-    SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(subtitleFilesPath);
-    SubtitleParser *parser = subParserFactory->getParser();
-    vector<SubtitleItem *> subs = parser->getSubtitles();
+    SubtitleParserFactory* subParserFactory = new SubtitleParserFactory(subtitleFilesPath);
+    SubtitleParser* parser = subParserFactory->getParser();
+    vector<SubtitleItem*> subs = parser->getSubtitles();
 
     vector<effect> effects;
-    for (SubtitleItem *element : subs) {
+    for (SubtitleItem* element : subs) {
         vector<std::string> words = element->getIndividualWords();
         if (words.empty()) continue;
 
@@ -257,6 +265,12 @@ vector<effect> ofApp::parseVideoEffects(string subtitleFilesPath) {
         cout << words.front() << " " << e.startTime << endl;
         e.type = words.front();           // name of effect
         e.code = std::stoi(words.at(1));  // byte code TODO: create enum to perform string/ code lookup
+        // check for speed, not all effects have a speed modifier specified
+        try {
+            e.speed = std::stoi(words.at(2));
+        } catch (const std::out_of_range& ex) {
+            e.speed = 0;
+        }
         effects.push_back(e);
     }
     cout.flush();
@@ -276,18 +290,27 @@ void ofApp::getVideos() {
 
 // Trigger specified effect at timestamp
 void ofApp::updateEffects() {
+    // calculate milliseconds from frame
     float currentFrame = player.getCurrentFrame();
     float currentMillis = currentFrame / frameRate * 1000;
-    // cout << "current frame " << currentFrame;
-    // cout << "\ncurrent position " << currentMillis << "\n";
 
     for (auto effect = currentVideo.effects.begin(); effect != currentVideo.effects.end(); ++effect) {
+        // check if it's time for next effect
         if (currentMillis < effect->startTime) continue;
 
-        mserial.writeByte((char)effect->code);
+        // construt command from effect
+        string command;
+        command.append(effect->code);
+        command.append(",");
+        command.append(effect->speed);
+
+        // send comma seperated command to hardware
+        mserial.writeBytes(command.c_str(), 8);
         printf("----------------------------------------");
         printf("%c", effect->type.c_str());
         printf("----------------------------------------");
+
+        // remove effect from list (gets repopulated when a new video loads)
         currentVideo.effects.erase(currentVideo.effects.begin());
         break;
     }

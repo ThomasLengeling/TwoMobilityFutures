@@ -9,6 +9,8 @@ struct effect {
     int frame;
     int startTime;
     int code;
+    int speed;
+    int leds;
     string type;
 };
 struct video {
@@ -71,8 +73,8 @@ class ofApp : public ofBaseApp {
 
     // Serial
     ofSerial mserial;
-    char receivedData[1];
+    char receivedData[8];
     bool useSerial = true;
     bool completedHandshake = false;
-    char handshakeMessage = 0;
+    char handshakeMessage = 's';
 };
