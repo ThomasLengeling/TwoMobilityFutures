@@ -18,6 +18,7 @@ enum lightMode {
 char* handshakeMessage = "s";
 const size_t BUFFER_SIZE = 8;
 char line[BUFFER_SIZE];
+int baudRate = 115200;
 
 // leds
 lightMode currentMode = OFF;
@@ -28,9 +29,10 @@ int teensyPins[] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 29, 30, 23, 22, 21, 20, 17};
 int pins[] = {teensyPins[8],  teensyPins[4],  teensyPins[1],  teensyPins[14], teensyPins[9], teensyPins[6],
               teensyPins[3],  teensyPins[12], teensyPins[10], teensyPins[7],  teensyPins[2], teensyPins[13],
               teensyPins[11], teensyPins[15], teensyPins[5],  teensyPins[10]};
+
 // example orientation pins
-int northPins[] = {1, 2, 3, 4};
-// etc, ...
+    // int northPins[] = {1, 2, 3, 4};
+    // etc, ...
 
 // jled config
 JLed led1 = JLed(pins[0]);
@@ -91,18 +93,17 @@ void startBreath(int speed = 5000) {
     }
 }
 
-void startFlicker() {
+void startFlicker(int speed = 1000) {
     for (int i = 0; i < LED_COUNT; i++) {
-        leds[i].Candle(5, 255, 1000).Forever();
+        leds[i].Candle(5, 255, speed).Forever();
     }
 }
 
-void startStrobe() {
+void startStrobe(int speed = 25) {
     for (int i = 0; i < LED_COUNT; i++) {
-        leds[i].Blink(25, 25).Forever();
+        leds[i].Blink(speed, speed).Forever();
     }
 }
-
 void startRandomStrobe() {
     for (int i = 0; i < LED_COUNT; i++) {
         long ledOn = random(0, 2);
@@ -116,14 +117,14 @@ void startRandomStrobe() {
 
 void startFadeOn(bool isSequential = false, int speed = 1000) {
     if (isSequential == true) {
-        int delay = 1000;
+        int delay = 200;
         for (int i = 0; i < LED_COUNT; i++) {
             int ledDelay = delay * i;
             leds[i].FadeOn(speed).DelayBefore(ledDelay);
         }
     } else {
         for (int i = 0; i < LED_COUNT; i++) {
-            leds[i].FadeOn(1000);
+            leds[i].FadeOn(speed);
         }
     }
 }
@@ -133,20 +134,20 @@ void startFadeOff(bool isSequential = false, int speed = 1000) {
         leds[i].On();
     }
     if (isSequential == true) {
-        int delay = 1000;
+        int delay = 200;
         for (int i = 0; i < LED_COUNT; i++) {
             int ledDelay = delay * i;
             leds[i].FadeOff(speed).DelayBefore(ledDelay);
         }
     } else {
         for (int i = 0; i < LED_COUNT; i++) {
-            leds[i].FadeOff(1000);
+            leds[i].FadeOff(speed);
         }
     }
 }
 
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(baudRate);
 
     for (int i = 0; i < LED_COUNT; i++) {
         pinMode(pins[i], OUTPUT);
@@ -163,8 +164,7 @@ void loop() {
     if (Serial.available()) {
         int inputLength = Serial.readBytes(line, BUFFER_SIZE);
 
-        // parse command
-        // https://forum.arduino.cc/t/parsing-comma-separated-string-values/514977/7
+        // parse command (approach https://forum.arduino.cc/t/parsing-comma-separated-string-values/514977/7)
         int effect, speed;
         char* field;
         field = strtok(line, ",");
@@ -182,46 +182,83 @@ void loop() {
         }
 
         // check effect trigger
-        if (effect == 1) {
-            reset();
-            currentMode = ON;
-            Serial.println("on");
-            startOn();
-        }
-        if (effect == 2) {
-            reset();
-            currentMode = OFF;
-            Serial.write("off");
-            startOff();
-        }
-        if (effect == 3) {
-            reset();
-            currentMode = BREATH;
-            Serial.write("breathe");
-            startBreath(speed);
-        }
-        if (effect == FLICKER) {
-            reset();
-            currentMode = FLICKER;
-            Serial.write("flicker");
-            startFlicker();
-        }
-        if (effect == STROBE) {
-            reset();
-            currentMode = STROBE;
-            Serial.write("strobe");
-            startStrobe();
-        }
-        if (effect == RANDOM_STROBE) {
-            reset();
-            currentMode = RANDOM_STROBE;
-            Serial.write("random strobe");
-            startRandomStrobe();
-        }
-    }
-    // update led effects
-    for (int i = 0; i < LED_COUNT; i++) {
-        leds[i].Update();
-    }
+        switch (effect) {
+            case ON:
+                reset();
+                currentMode = ON;
+                startOn();
+                break;
+            case OFF:
+                reset();
+                currentMode = OFF;
+                startOff();
+                break;
+            case BREATH:
+                reset();
+                currentMode = BREATH;
+                if (speed == 0)
+                    startBreath();
+                else
+                    startBreath(speed);
+                break;
 
+            case FLICKER:
+                reset();
+                currentMode = FLICKER;
+                if (speed == 0)
+                    startFlicker();
+                else
+                    startFlicker(speed);
+                break;
+            case STROBE:
+                reset();
+                currentMode = STROBE;
+                if (speed == 0)
+                    startStrobe();
+                else
+                    startStrobe(speed);
+            case RANDOM_STROBE:
+                reset();
+                currentMode = RANDOM_STROBE;
+                startRandomStrobe();
+                break;
+            case FADE_ON:
+                reset();
+                currentMode = FADE_ON;
+                if (speed == 0)
+                    startFadeOn(false);
+                else
+                    startFadeOn(false, speed);
+                break;
+            case FADE_OFF:
+                reset();
+                currentMode = FADE_OFF;
+                if (speed == 0)
+                    startFadeOff(false);
+                else
+                    startFadeOff(false, speed);
+                break;
+            case FADE_ON_SEQ:
+                reset();
+                currentMode = FADE_ON_SEQ;
+                if (speed == 0)
+                    startFadeOn(true);
+                else
+                    startFadeOn(true, speed);
+                break;
+            case FADE_OFF_SEQ:
+                reset();
+                currentMode = FADE_OFF_SEQ;
+                if (speed == 0)
+                    startFadeOff(true);
+                else
+                    startFadeOff(true, speed);
+        }
+
+        // update led effects
+        for (int i = 0; i < LED_COUNT; i++) {
+            leds[i].Update();
+        }
+
+    }
 }
