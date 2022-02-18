@@ -298,17 +298,14 @@ void ofApp::updateEffects() {
         // check if it's time for next effect
         if (currentMillis < effect->startTime) continue;
 
-        // construt command from effect
-        string command;
-        command.append(effect->code);
-        command.append(",");
-        command.append(effect->speed);
+        // construct command from effect
+        string command = to_string(effect->code) + "," + to_string(effect->speed);
 
         // send comma seperated command to hardware
         mserial.writeBytes(command.c_str(), 8);
-        printf("----------------------------------------");
-        printf("%c", effect->type.c_str());
-        printf("----------------------------------------");
+        cout << "----------------------------------------" << endl;
+        cout << command << endl;
+        cout << "----------------------------------------" << endl;
 
         // remove effect from list (gets repopulated when a new video loads)
         currentVideo.effects.erase(currentVideo.effects.begin());
