@@ -43,7 +43,6 @@ public:
     void getVideos();
     void initVideoEffects(vector<string> videoNames);
     void loadVideo(string videoName);
-    void drawStats();
     void updateSerial();
     void updateControls();
     void updateEffects(int currentFrame, float currentFPS);

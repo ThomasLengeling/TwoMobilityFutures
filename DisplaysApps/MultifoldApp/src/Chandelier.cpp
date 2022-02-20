@@ -7,6 +7,7 @@ Chandelier::Chandelier() {
     mSerialId = 0;
     mSerialBaudRate = 115200;
 }
+
 //---------------------------------------------------------
 void Chandelier::initSerial(int portid, int baud) {
     ofLog(OF_LOG_NOTICE) << "init Serial  ";
@@ -23,7 +24,7 @@ void Chandelier::initSerial(int portid, int baud) {
     }
 
     // find the correponding serial port
-    for (auto &devices : deviceList) {
+    for (auto& devices : deviceList) {
         ofLog(OF_LOG_NOTICE) << devices.getDeviceName() << " " << devices.getDeviceID();
         if (mSerialName == devices.getDeviceName()) {
             mSerialName = devices.getDeviceName();
@@ -39,86 +40,83 @@ void Chandelier::initSerial(int portid, int baud) {
 }
 
 // Read/ write serial
-
 //---------------------------------------------------------
 void Chandelier::updateSerial() {
     if (!useSerial) return;
-    if (mSerial.available()) {
-        // TODO: not fully implemented on arduino end
-        if (!completedHandshake) {
-            requestHandshake();
-        }
-        mSerial.readBytes(receivedData, 1);
+    if (!completedHandshake) requestHandshake();
 
-        if (receivedData == (char *)handshakeMessage) {
-            cout << "handshake completed\n";
-            completedHandshake = true;
-        }
-
-        // NOTE: only triggered by GUI
-        if (ledButtonOn) {
-            unsigned char myByte = 1;
-            mSerial.writeByte(myByte);
-            printf("on\n");
-        }
-        if (ledButtonOff) {
-            unsigned char myByte = 2;
-            mSerial.writeByte(myByte);
-            printf("off\n");
-        }
-        if (ledButtonBreathe) {
-            unsigned char myByte = 3;
-            mSerial.writeByte(myByte);
-            printf("breath\n");
-        }
-        if (ledButtonCandle) {
-            unsigned char myByte = 4;
-            mSerial.writeByte(myByte);
-            printf("candle\n");
-        }
-        if (ledButtonStrobe) {
-            unsigned char myByte = 5;
-            mSerial.writeByte(myByte);
-            printf("strobe\n");
-        }
-        if (ledButtonRandomStrobe) {
-            unsigned char myByte = 6;
-            mSerial.writeByte(myByte);
-            printf("random strobe\n");
-        }
-        if (ledButtonFadeOn) {
-            unsigned char buf[1] = {7};
-            mSerial.writeBytes(&buf[0], 1);
-            printf("pressed fade on\n");
-        }
-        if (ledButtonFadeOff) {
-            unsigned char buf[1] = {8};
-            mSerial.writeBytes(&buf[0], 1);
-            printf("pressed fade off\n");
-        }
-        if (ledButtonFadeOnSequential) {
-            unsigned char buf[1] = {9};
-            mSerial.writeBytes(&buf[0], 1);
-            printf("pressed fade on sequential\n");
-        }
-        /*
-        if (ledButtonFadeOffSequential) {
-            unsigned char buf[1] = {'10'};
-            mSerial.writeBytes(&buf[0], 1);
-            printf("fade on sequential\n");
-        }
-        */
-        cout.flush();
+    // NOTE: only triggered by GUI
+    if (ledButtonOn) {
+        char* buf = "1";
+        mSerial.writeBytes(buf, 8);
+        printf("pressed on\n");
     }
+    if (ledButtonOff) {
+        char* buf = "2,2000";
+        mSerial.writeBytes(buf, 8);
+        printf("pressed off\n");
+    }
+    if (ledButtonBreathe) {
+        char* buf = "3,500";
+        mSerial.writeBytes(buf, 8);
+        printf("pressed breathe\n");
+    }
+    if (ledButtonCandle) {
+        char* buf = "4,500";
+        mSerial.writeBytes(buf, 8);
+        printf("pressed candle\n");
+    }
+    if (ledButtonStrobe) {
+        char* buf = "5,500";
+        mSerial.writeBytes(buf, 8);
+        printf("pressed strobe\n");
+    }
+    if (ledButtonRandomStrobe) {
+        char* buf = "6,500";
+        mSerial.writeBytes(buf, 8);
+        printf("pressed random strobe\n");
+    }
+    if (ledButtonFadeOn) {
+        char* buf = "7,500";
+        mSerial.writeBytes(buf, 8);
+        printf("pressed fade on\n");
+    }
+    if (ledButtonFadeOff) {
+        char* buf = "8,500";
+        mSerial.writeBytes(buf, 8);
+        printf("pressed fade off\n");
+    }
+    if (ledButtonFadeOnSequential) {
+        char* buf = "9,500";
+        mSerial.writeBytes(buf, 8);
+        printf("pressed fade on seq\n");
+    }
+    if (ledButtonFadeOffSequential) {
+        char* buf = "10,500";
+        mSerial.writeBytes(buf, 8);
+        printf("pressed fade off seq\n");
+    }
+
+    cout.flush();
 }
 
 // Initilize handshake with Teensy
-// TODO: not fully implemented on Teensy side
-
 //--------------------------------------------------------
 void Chandelier::requestHandshake() {
-    // cout << "requesting handshake\n";
-    mSerial.writeByte(handshakeMessage);
+    if (mSerial.available()) {
+        mSerial.readBytes(receivedData, 8);
+
+        if (receivedData != NULL && !completedHandshake) {
+            if (receivedData[0] == handshakeMessage) {
+                cout << "handshake success" << endl;
+                completedHandshake = true;
+            }
+        }
+    }
+
+    if (!completedHandshake) {
+        mSerial.writeBytes(handshakeMessage, 8);
+    }
 }
 
 /*
@@ -126,11 +124,7 @@ void Chandelier::requestHandshake() {
 */
 //--------------------------------------------------------
 void Chandelier::initGui() {
-    // gui.setup();
     videoGroup.setup("Video Controls");
-    // videoGroup.add(videoStartButton.setup("Start"));
-    // videoGroup.add(videoStopButton.setup("Stop"));
-
     ledGroup.setup("LED Controls");
     ledGroup.add(ledButtonOn.setup("LED On"));
     ledGroup.add(ledButtonOff.setup("LED Off"));
@@ -142,44 +136,29 @@ void Chandelier::initGui() {
     ledGroup.add(ledButtonFadeOff.setup("Fade Off"));
     ledGroup.add(ledButtonFadeOnSequential.setup("Fade In Seq"));
     ledGroup.add(ledButtonFadeOffSequential.setup("Fade Off Seq"));
-    // gui.add(&videoGroup);
-    // gui.add(&ledGroup);
-
-    // scrub.setup();
-    // scrub.add(scrubber.set("Scrub", 0, 0, this->getTotalNumFrames()));
-    // scrub.setPosition(0, ofGetHeight() - 50);
-    // scrub.setSize(ofGetWidth(), 50);
-    // scrubber.addListener(this, &Chandelier::updateScrubber);
 }
 //--------------------------------------------------------
 
 void Chandelier::updateControls() {
-    if (videoStartButton) {  //&& !player.isPlaying()
+    if (videoStartButton) {
         printf("start\n");
         cout.flush();
-        // player.play();
     }
     if (!videoStopButton) {
         printf("stop\n");
         cout.flush();
-        // player.stop();
     }
 }
 
-void Chandelier::updateScrubber(int &value) {
+void Chandelier::updateScrubber(int& value) {
     printf("set frame: %i\n", value);
     cout.flush();
-    // player.setFrame(scrubber);
-}
-
-void Chandelier::drawStats() {
-    // ofDrawBitmapString("Video Speed: " + std::to_string(player.getSpeed()), 20, videoHeight + 20);
-    // ofDrawBitmapString("Video Frame: " + std::to_string(player.getCurrentFrame()), 20, videoHeight + 35);
 }
 
 /*
 -- Data / Effects --
 */
+
 
 void Chandelier::loadVideo(string videoName) {
     for (int i = 0; i < videos.size(); i++) {
@@ -197,6 +176,8 @@ void Chandelier::loadVideo(string videoName) {
     cout << "current video " << currentVideo.name;
 }
 
+// Load SRT file associated with each video name
+//--------------------------------------------------------
 void Chandelier::initVideoEffects(vector<string> videoNames) {
     // TODO: prevent having to duplicate this from ofApp.cpp
     string subtitlesDir = ofFilePath::getAbsolutePath(ofToDataPath("C:/Users/Bizon/Desktop/App/data/")) + "subtitles/";
@@ -214,26 +195,31 @@ void Chandelier::initVideoEffects(vector<string> videoNames) {
 }
 
 // Access data from individual subtitle caption (seperated because this could later get more complex/ nuanced)
+//--------------------------------------------------------
 vector<effect> Chandelier::parseVideoEffects(string subtitleFilesPath) {
-    SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(subtitleFilesPath);
+    SubtitleParserFactory* subParserFactory = new SubtitleParserFactory(subtitleFilesPath);
 
-    SubtitleParser *parser = subParserFactory->getParser();
-    vector<SubtitleItem *> subs = parser->getSubtitles();
+    SubtitleParser* parser = subParserFactory->getParser();
+    vector<SubtitleItem*> subs = parser->getSubtitles();
 
     vector<effect> effects;
     if (subs.size() > 0) {
-        for (SubtitleItem *element : subs) {
+        for (SubtitleItem* element : subs) {
             vector<std::string> words = element->getIndividualWords();
             if (words.empty()) continue;
 
             effect e;
             e.startTime = element->getStartTime();
-            cout << e.startTime << " " << words.front() << endl;
-            e.type = words.front();  // name of effect
-            if (words.size() > 1) {
-                e.code = std::stoi(words.at(1));  // byte code TODO: create enum to perform string/ code lookup
-                effects.push_back(e);
+            cout << words.front() << " " << e.startTime << endl;
+            e.type = words.front();
+            e.code = std::stoi(words.at(1));
+            // check for speed, not all effects have a speed modifier specified
+            try {
+                e.speed = std::stoi(words.at(2));
+            } catch (const std::out_of_range& ex) {
+                e.speed = 0;
             }
+            effects.push_back(e);
         }
     }
     cout.flush();
@@ -242,6 +228,7 @@ vector<effect> Chandelier::parseVideoEffects(string subtitleFilesPath) {
 
 // Retrieve list of videos in project data directory (e.g. used to select videos
 // via GUI)
+//--------------------------------------------------------
 void Chandelier::getVideos() {
     string path = "videos/";
     ofDirectory dir(path);
@@ -252,16 +239,24 @@ void Chandelier::getVideos() {
 }
 
 // Trigger specified effect at timestamp
+//--------------------------------------------------------
 void Chandelier::updateEffects(int currentFrame, float currentFPS) {
     float currentMillis = currentFrame / currentFPS * 1000;
-    // cout << "current frame " << currentFrame;
-    // cout << "\ncurrent position " << currentMillis << "\n";
 
     for (auto effect = currentVideo.effects.begin(); effect != currentVideo.effects.end(); ++effect) {
+        // check if it's time for next effect
         if (currentMillis < effect->startTime) continue;
 
-        mSerial.writeByte((char)effect->code);
-        printf("----------- %c -----------", effect->type.c_str());
+        // construct command from effect
+        string command = to_string(effect->code) + "," + to_string(effect->speed);
+
+        // send comma seperated command to hardware
+        mSerial.writeBytes(command.c_str(), 8);
+        cout << "----------------------------------------" << endl;
+        cout << command << endl;
+        cout << "----------------------------------------" << endl;
+
+        // remove effect from list (gets repopulated when a new video loads)
         currentVideo.effects.erase(currentVideo.effects.begin());
         break;
     }
