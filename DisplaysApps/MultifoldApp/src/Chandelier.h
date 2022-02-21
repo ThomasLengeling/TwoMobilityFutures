@@ -96,5 +96,5 @@ private:
     char receivedData[10];
 
     bool completedHandshake;
-    char handshakeMessage;
+    char* handshakeMessage;
 };

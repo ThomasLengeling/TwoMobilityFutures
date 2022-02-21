@@ -3,7 +3,7 @@
 Chandelier::Chandelier() {
     useSerial = true;
     completedHandshake = false;
-    handshakeMessage = 's';
+    handshakeMessage = "s";
     mSerialId = 0;
     mSerialBaudRate = 115200;
 }
