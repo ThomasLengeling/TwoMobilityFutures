@@ -107,7 +107,7 @@ void Chandelier::requestHandshake() {
         mSerial.readBytes(receivedData, 8);
 
         if (receivedData != NULL && !completedHandshake) {
-            if (receivedData[0] == handshakeMessage) {
+            if (receivedData[0] == 's') {
                 cout << "handshake success" << endl;
                 completedHandshake = true;
             }
@@ -115,6 +115,7 @@ void Chandelier::requestHandshake() {
     }
 
     if (!completedHandshake) {
+        cout << "requesting handshake" << endl;
         mSerial.writeBytes(handshakeMessage, 8);
     }
 }
