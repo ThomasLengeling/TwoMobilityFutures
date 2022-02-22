@@ -38,7 +38,7 @@ public:
         return std::make_shared<Chandelier>();
     }
 
-    void initSerial(int portid, int baud);
+    void initSerial(int portid, int baud = 115200);
     void initGui();
     void getVideos();
     void initVideoEffects(vector<string> videoNames);
@@ -53,6 +53,13 @@ public:
     int getSerialId() { return mSerialId; }
     int getBaudRate() { return mSerialBaudRate; }
     bool isSeralConnected() { return useSerial;};
+
+    bool getHandShake() {
+        return completedHandshake;
+    }
+    void updateHandShake() {
+        requestHandshake();
+    }
 
     ofxGuiGroup ledGroup;
     // TODO: temp fix, figure out how to determine millis in video
@@ -71,7 +78,6 @@ private:
     ofxGuiGroup videoGroup;
     ofxButton videoStartButton;
     ofxButton videoStopButton;
-
 
     ofxButton ledButtonOn;
     ofxButton ledButtonOff;

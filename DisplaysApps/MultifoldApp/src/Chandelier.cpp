@@ -5,7 +5,6 @@ Chandelier::Chandelier() {
     completedHandshake = false;
     handshakeMessage = "s";
     mSerialId = 0;
-    mSerialBaudRate = 115200;
 }
 
 //---------------------------------------------------------
@@ -39,11 +38,13 @@ void Chandelier::initSerial(int portid, int baud) {
     }
 }
 
+
+
 // Read/ write serial
 //---------------------------------------------------------
 void Chandelier::updateSerial() {
     if (!useSerial) return;
-    if (!completedHandshake) requestHandshake();
+
 
     // NOTE: only triggered by GUI
     if (ledButtonOn) {

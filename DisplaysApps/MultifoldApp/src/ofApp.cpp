@@ -25,10 +25,10 @@ void ofApp::setup(){
     //Video
     HPV::InitHPVEngine();
 
-    setupChanderlier();
-
     //load UDP information
     setupUDP();
+
+    setupChanderlier();
 
     //GUI
     setupGui();
@@ -41,6 +41,8 @@ void ofApp::setup(){
     
     //commom state
     setupCommonState();
+
+  
 
     ofResetElapsedTimeCounter();
     mInitTimer = 14000;//seconds
@@ -83,6 +85,8 @@ void ofApp::update() {
         //update audio pos
         double audioPos = player.getPosition();
         mMasterAudio.set(audioPos);
+
+        mChanderlier->updateHandShake();
 
         //lock the fps with app frame rate
         if (mLockFpsUpdate) {
@@ -132,7 +136,7 @@ void ofApp::update() {
 
             //init sequence on computer start, only once
             initCouter++;
-            if (initCouter > 24 * 10) { //wwiting time
+            if (initCouter > 24 * 15) { //wwiting time
                 ofLog(OF_LOG_NOTICE) << "START MOVIE " << std::endl;
                 startMasterVideo();
 
@@ -188,7 +192,7 @@ void ofApp::update() {
             }
 
             //reset comands, add anything for reset videos
-            if (initCouter > 24 * 5) {
+            if (initCouter > 24 * 3) {
                 ofLog(OF_LOG_NOTICE) << "Reset Play";
                 mCommon->commonFrame = 0;
                 //
@@ -570,7 +574,7 @@ void ofApp::setupAudioSystem() {
 
     //audio volumen setup
     if (mMasterUDP) {
-        player.volume = 0.0;
+        player.volume = 0.4;
     }
     else {
         player.volume = 0.0; //.3
@@ -631,13 +635,17 @@ void ofApp::setupGui(){
     if (mMasterUDP) {
         mPlayVideos.addListener(this, &ofApp::playVideos);
         mResetVideos.addListener(this, &ofApp::resetVideos);
+
+     
+        //GUI setup
+        mGui.setup(parameters);
+        mGui.add(&mChanderlier->ledGroup);
+        mGui.setPosition(330, 180);
     }
+
     mMasterAudio.addListener(this, &ofApp::audioSlider);
     
-    //GUI setup
-    mGui.setup(parameters);
-    mGui.add(&mChanderlier->ledGroup);
-    mGui.setPosition(20, 95);
+
     
     //default values
     mDrawGUI = true;
@@ -647,13 +655,20 @@ void ofApp::setupGui(){
 //----------------------------------------------------------------
 void ofApp::setupChanderlier() {
 
-    ofLog(OF_LOG_NOTICE) << "Loading Chandelier" << std::endl;
 
-    mChanderlier = Chandelier::create();
-    mChanderlier->initSerial(0, 9600);
-    mChanderlier->useSerial = false;
-    mChanderlier->initVideoEffects(mCommon->mSeqNames);
-    mChanderlier->initGui();
+
+    if (mMasterUDP) {
+        ofLog(OF_LOG_NOTICE) << "Loading Chandelier" << std::endl;
+
+        mChanderlier = Chandelier::create();
+        mChanderlier->initSerial(0, 115200);
+        mChanderlier->useSerial = true;
+        mChanderlier->initVideoEffects(mCommon->mSeqNames);
+        mChanderlier->initGui();
+    }
+    else {
+
+    }
 }
 
 //--------------------------------------------------------------
@@ -706,13 +721,15 @@ void ofApp::drawGui() {
         int i = 0;
         ofSetColor(200);
         for (auto name : mCommon->mSeqNames) {
-            if (mCommon->mCurrentSeqName == name) {
-                ofSetColor(255);
+            if (i < mPlayListMax) {
+                if (mCommon->mCurrentSeqName == name) {
+                    ofSetColor(255);
+                }
+                else {
+                    ofSetColor(170);
+                }
+                ofDrawBitmapString(to_string(i) + " " + name, 20, 250 + i * 20);
             }
-            else {
-                ofSetColor(170);
-            }
-            ofDrawBitmapString(to_string(i) + " " + name, 20, 250 + i * 20);
             i++;
         }
 
@@ -721,6 +738,13 @@ void ofApp::drawGui() {
             ofDrawBitmapString("Master " + to_string(mCommon->mId), 320, 100);
             ofDrawRectangle(355, 120, 30, 30);
 
+            if (mChanderlier->getHandShake()) {
+                ofSetColor(0, 200, 220);
+                ofDrawRectangle(470, 120, 30, 30);
+                ofSetColor(255);
+                ofDrawBitmapString("HandShake ", 480, 100);
+            }
+            ofSetColor(200, 50, 50);
             ofDrawBitmapString("Video: " + mCommon->mVideoType, 320, 15);
             ofDrawBitmapString("Audio: " + mAudioDevice + "O: " + to_string(mAudioOutputs)+ " a c: "+ to_string(player.getSoundFile().getNumChannels()), 320, 30);
             ofDrawBitmapString("Serial: " +mChanderlier->getSerialName() + " "+to_string(mChanderlier->getSerialId())+" "+ to_string(mChanderlier->getBaudRate()), 320, 45);
@@ -751,6 +775,7 @@ void ofApp::drawGui() {
     }
 }
 
+//first video init
 //--------------------------------------------------------------
 void ofApp::startMasterVideo() {
     ofLog(OF_LOG_NOTICE) << "send Master";
@@ -774,6 +799,9 @@ void ofApp::startMasterVideo() {
     //start video loop
     mCurrSyncMode = 1;
     setSyncMode(mCurrSyncMode);
+
+    // load new chandelier effects
+    mChanderlier->loadVideo(mCommon->mCurrentSeqName);
 }
 
 //--------------------------------------------------------------
@@ -820,10 +848,12 @@ void ofApp::loadSequence(int id) {
             string message = "n " + to_string(id);
             udpSendLeft.Send(message.c_str(), message.length());
             udpSendCenter.Send(message.c_str(), message.length());
+
+            // load new chandelier effects
+            mChanderlier->loadVideo(mCommon->mCurrentSeqName);
         }
 
-        // load new chandelier effects
-        mChanderlier->loadVideo(mCommon->mCurrentSeqName);
+
     }
 }
 //
@@ -886,25 +916,25 @@ void ofApp::keyPressed(int key){
         loadSequence(2);
     }
     if (key == '3') {
-        loadSequence(3);
+        //loadSequence(3);
     }
     if (key == '4') {
-        loadSequence(4);
+       // loadSequence(4);
     }
     if (key == '5') {
-        loadSequence(5);
+       // loadSequence(5);
     }
     if (key == '6') {
-        loadSequence(6);
+        //loadSequence(6);
     }
     if (key == '7') {
-        loadSequence(7);
+        //loadSequence(7);
     }
     if (key == '8') {
-        loadSequence(8);
+        //loadSequence(8);
     }
     if (key == '9') {
-        loadSequence(9);
+       // loadSequence(9);
     }
 
     //audio
