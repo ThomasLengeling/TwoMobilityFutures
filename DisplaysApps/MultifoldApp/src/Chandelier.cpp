@@ -171,9 +171,9 @@ void Chandelier::loadVideo(string videoName) {
         }
     }
     // Turn off chandelier on each load TODO:
-    unsigned char myByte = 2;
-    mSerial.writeByte(myByte);
-    printf("off\n");
+    char* buf = "2,2000";
+    mSerial.writeBytes(buf, 8);
+    printf("reset chandelier\n");
     cout << "current video " << currentVideo.name;
 }
 
