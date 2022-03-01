@@ -99,7 +99,9 @@ void WindowVideoApp::draw() {
 
 	//draw the debug img
 	if (!mCommon->mLoadedVideos[mId]) {
-		mDebugImg.draw(0, 0, ofGetWindowWidth(), ofGetWindowHeight());
+		if (mDebugImg.isAllocated()) {
+			mDebugImg.draw(0, 0, ofGetWindowWidth(), ofGetWindowHeight());
+		}
 	}
 	else {
 

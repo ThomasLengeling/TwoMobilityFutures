@@ -174,7 +174,7 @@ void ofApp::update() {
 
                 //update counter
                 mPlayListCounter++;
-                if (mPlayListCounter > mPlayListMax) {
+                if (mPlayListCounter >= mPlayListMax) {
                     mPlayListCounter = 0;
                 }
 
@@ -574,7 +574,8 @@ void ofApp::setupAudioSystem() {
 
     //audio volumen setup
     if (mMasterUDP) {
-        player.volume = 0.4;
+        player.volume = 0.01
+            ;
     }
     else {
         player.volume = 0.0; //.3
